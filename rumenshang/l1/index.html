@@ -42,7 +42,7 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 @media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
 .pm-writer{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none}.pm-writer svg{max-width:90%;max-height:90%}
-</style><script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.3/dist/hanzi-writer.min.js"></script>
+</style></script>
 </head>
 <body>
 <div class="container">
@@ -96,6 +96,21 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 </div>
 
 <audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+// Dynamic HanziWriter loader — avoids blocking page load (jsdelivr CDN may be slow)
+var _hwLoaded=false,_hwLoading=false,_hwCallbacks=[];
+function _loadHW(cb){
+  if(typeof HanziWriter!=='undefined'){cb();return;}
+  _hwCallbacks.push(cb);
+  if(_hwLoading)return;
+  _hwLoading=true;
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/hanzi-writer@3.3/dist/hanzi-writer.min.js';
+  s.onload=function(){_hwLoaded=true;_hwCallbacks.forEach(function(f){f()});_hwCallbacks=[]};
+  s.onerror=function(){_hwCallbacks=[]};
+  document.head.appendChild(s);
+}
+</script>
 <script>var p=document.getElementById('player');var hz=false;function cv(){var v=window.speechSynthesis.getVoices();hz=v.some(function(x){return x.lang.startsWith('zh')})}cv();if(window.speechSynthesis.onvoiceschanged!==undefined)window.speechSynthesis.onvoiceschanged=cv;function play(t){var c=t;if(hz){var u=new SpeechSynthesisUtterance(c);u.lang='zh-CN';u.rate=.9;var fb=setTimeout(function(){speechSynthesis.cancel();p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()},2500);u.onstart=function(){clearTimeout(fb)};u.onerror=function(){clearTimeout(fb);p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()};speechSynthesis.cancel();speechSynthesis.speak(u)}else{p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()}}function playAll(){var a=["你好","对不起","没关系","谢谢","不客气","再见","请","进","坐","听","说","读","写"];let i=0;function n(){if(i>=a.length)return;var c=a[i].replace(/[A-Za-z：:！。？，、]+/g,'').trim();if(!c)c=a[i];if(hz){var u=new SpeechSynthesisUtterance(c);u.lang='zh-CN';u.rate=.9;var fb=setTimeout(function(){speechSynthesis.cancel();p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()},2500);u.onstart=function(){clearTimeout(fb)};u.onerror=function(){clearTimeout(fb);p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()};speechSynthesis.cancel();speechSynthesis.speak(u)}else{p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()}i++;setTimeout(n,2000)}n()}
 var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;var writer=null;
 (function(){
@@ -125,7 +140,7 @@ onLoadCharDataError:function(){document.getElementById('pmWriter').style.display
 writer.animateCharacter({onComplete:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}});
 }catch(e){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}
 }
-if(typeof HanziWriter!=='undefined'){doCreate()}else{setTimeout(function(){doCreate()},300)}
+_loadHW(function(){if(typeof HanziWriter!=='undefined'){doCreate()}else{document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex';document.getElementById('pmHint').textContent='Trace the character in the grid'}})
 }
 function replayWriter(){var ch=pChars[curIdx];document.getElementById('pmHint').textContent='Loading stroke data...';showWriter(ch)}
 function openPractice(t){
