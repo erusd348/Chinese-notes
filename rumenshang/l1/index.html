@@ -12,8 +12,8 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 .sub{text-align:center;color:#888;font-size:12px;margin-bottom:14px}
 .section-label{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
 .row{display:flex;align-items:center;padding:7px 10px;border-bottom:1px solid #eee;gap:6px}
-.zh{font-size:15px;font-weight:bold;min-width:70px;color:#333}
-.py{font-size:11px;color:#999;min-width:90px;font-style:italic}
+.zh{font-size:15px;font-weight:bold;flex:1;min-width:0;color:#333}
+.py{font-size:11px;color:#999;flex:1;min-width:0;font-style:italic}
 .en{font-size:11px;color:#555;flex:1;min-width:0;word-break:break-word}
 .play{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0}
 .play:hover{background:#1A56DB;color:#fff}
@@ -38,11 +38,9 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 .pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
 .pm-nav-btn{padding:5px 11px;border:1px solid #ddd;border-radius:4px;font-size:14px;cursor:pointer;background:#fff;font-family:KaiTi,STKaiti,楷体,serif;min-width:34px;text-align:center}.pm-nav-btn:hover{border-color:#E65100;color:#E65100}.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
 .pm-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
-.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-replay{background:#e8f0fe;color:#1A56DB}.pm-btn-replay:hover{background:#d0e1fd}
-@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
+.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-replay{background:#e8f0fe;color:#1A56DB}@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
-.pm-writer{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none}.pm-writer svg{max-width:90%;max-height:90%}
-</style></script>
+.pm-writer{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;pointer-events:none}</style></script>
 </head>
 <body>
 <div class="container">
@@ -81,11 +79,10 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 <div class="pm-hint" id="pmHint">Stroke order loading...</div>
 <div class="pm-grid">
 <div class="pm-ref" id="pmRef"></div>
-<div class="pm-writer" id="pmWriter"></div>
 <canvas class="pm-canvas" id="pmCanvas"></canvas>
 </div>
 <div class="pm-btns">
-<button class="pm-btn pm-btn-replay" onclick="replayWriter()">Replay</button>
+
 <button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button>
 <button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button>
 <button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button>
@@ -96,23 +93,9 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 </div>
 
 <audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
-<script>
-// Dynamic HanziWriter loader — avoids blocking page load (jsdelivr CDN may be slow)
-var _hwLoaded=false,_hwLoading=false,_hwCallbacks=[];
-function _loadHW(cb){
-  if(typeof HanziWriter!=='undefined'){cb();return;}
-  _hwCallbacks.push(cb);
-  if(_hwLoading)return;
-  _hwLoading=true;
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/npm/hanzi-writer@3.3/dist/hanzi-writer.min.js';
-  s.onload=function(){_hwLoaded=true;_hwCallbacks.forEach(function(f){f()});_hwCallbacks=[]};
-  s.onerror=function(){_hwCallbacks=[]};
-  document.head.appendChild(s);
-}
-</script>
+
 <script>var p=document.getElementById('player');var hz=false;function cv(){try{var v=window.speechSynthesis.getVoices();hz=v.some(function(x){return x.lang.startsWith('zh')})}catch(e){}}try{cv()}catch(e){}if(window.speechSynthesis&&window.speechSynthesis.onvoiceschanged!==undefined)window.speechSynthesis.onvoiceschanged=cv;function play(t){var c=t;if(hz){var u=new SpeechSynthesisUtterance(c);u.lang='zh-CN';u.rate=.9;var fb=setTimeout(function(){speechSynthesis.cancel();p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()},2500);u.onstart=function(){clearTimeout(fb)};u.onerror=function(){clearTimeout(fb);p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()};try{speechSynthesis.cancel()}catch(e){};speechSynthesis.speak(u)}else{p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()}}function playAll(){var a=["你好","对不起","没关系","谢谢","不客气","再见","请","进","坐","听","说","读","写"];let i=0;function n(){if(i>=a.length)return;var c=a[i].replace(/[A-Za-z：:！。？，、]+/g,'').trim();if(!c)c=a[i];if(hz){var u=new SpeechSynthesisUtterance(c);u.lang='zh-CN';u.rate=.9;var fb=setTimeout(function(){speechSynthesis.cancel();p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()},2500);u.onstart=function(){clearTimeout(fb)};u.onerror=function(){clearTimeout(fb);p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()};try{speechSynthesis.cancel()}catch(e){};speechSynthesis.speak(u)}else{p.src='https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q='+encodeURIComponent(c);p.play()}i++;setTimeout(n,2000)}n()}
-var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;var writer=null;
+var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;
 (function(){
 var bs=document.querySelectorAll('.practice');
 bs.forEach(function(b){
@@ -127,34 +110,9 @@ c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingCl
 c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
 c.onpointerup=c.onpointerleave=function(){drawing=false};
 }
-function showWriter(ch){
-var w=document.getElementById('pmWriter');w.innerHTML='';w.style.display='flex';
-document.getElementById('pmRef').style.display='none';
-if(writer){try{writer.cancel()}catch(e){}}
-function doCreate(){
-try{
-writer=HanziWriter.create('pmWriter',ch,{width:240,height:240,padding:5,strokeAnimationSpeed:1.5,delayBetweenStrokes:350,radicalColor:'#1A56DB',strokeColor:'#333',showOutline:true,showCharacter:false,
-onLoadCharDataSuccess:function(){document.getElementById('pmHint').textContent='Watch, then trace!'},
-onLoadCharDataError:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex';document.getElementById('pmHint').textContent='Trace the character in the grid'}
-});
-writer.animateCharacter({onComplete:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}});
-}catch(e){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}
-}
-_loadHW(function(){if(typeof HanziWriter!=='undefined'){doCreate()}else{document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex';document.getElementById('pmHint').textContent='Trace the character in the grid'}})
-}
-function replayWriter(){var ch=pChars[curIdx];document.getElementById('pmHint').textContent='Loading stroke data...';showWriter(ch)}
-function openPractice(t){
-var first=t[0];var idx=pChars.indexOf(first);curIdx=idx>=0?idx:0;
-document.getElementById('pm').classList.add('open');showChar();renderNav();setTimeout(initCanvas,50);
-}
-function closePractice(){if(writer){try{writer.cancel()}catch(e){}}document.getElementById('pm').classList.remove('open')}
+function closePractice(){document.getElementById('pm').classList.remove('open')}
 function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
-function showChar(){
-var ch=pChars[curIdx];document.getElementById('pmTitle').textContent=ch;
-document.getElementById('pmRef').textContent=ch;
-document.getElementById('pmHint').textContent='Loading stroke data...';
-clearCanvas();showWriter(ch);
-}
+function showChar(){var ch=pChars[curIdx];document.getElementById("pmTitle").textContent=ch;document.getElementById("pmRef").textContent=ch;document.getElementById("pmHint").textContent="Trace the character in the grid";clearCanvas()}
 function loadChar(i){curIdx=i;showChar();renderNav()}
 function renderNav(){
 var nav=document.getElementById('pmNav'),h='';
