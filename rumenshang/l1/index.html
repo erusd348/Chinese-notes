@@ -42,6 +42,7 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 .pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}
 @media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
+.pm-sn{position:absolute;width:22px;height:22px;border:1.5px solid rgba(200,60,60,.5);border-radius:50%;background:rgba(255,255,255,.75);color:#c33;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;font-family:Arial,sans-serif;transform:translate(-50%,-50%)}
 </style></head>
 <body>
 <div class="container">
@@ -82,6 +83,7 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 <div class="pm-hint" id="pmHint">Stroke order loading...</div>
 <div class="pm-grid">
 <div class="pm-ref" id="pmRef"></div>
+<div id="pmNumbers" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>
 <canvas class="pm-canvas" id="pmCanvas"></canvas>
 </div>
 <div class="pm-btns">
@@ -197,10 +199,10 @@ var ch=entry.chars[ci];
 entry._ci=ci;
 document.getElementById('pmTitle').textContent=entry.word+' \u2192 stroke '+ (ci+1) + '/' + entry.chars.length + ': '+ch;
 document.getElementById('pmRef').textContent=ch;
-document.getElementById('pmHint').textContent='Loading stroke order...';
+document.getElementById('pmHint').textContent='Loading...';
 clearCanvas();
 loadStrokeOrder(ch,function(so){
-document.getElementById('pmHint').textContent='Stroke order: '+so.text;
+document.getElementById('pmHint').textContent=so.text||'Stroke order: '+so.count+' strokes';
 });
 }
 function loadChar(i,ci){curIdx=i;showChar(ci||0);renderNav()}
@@ -235,6 +237,7 @@ h+='</div>';
 }
 s.innerHTML=h;window.print();
 }
+function renderStrokeNumbers(so){var c=document.getElementById('pmNumbers');c.innerHTML='';if(!so||!so.mids||!so.mids.length)return;var g=document.querySelector('.pm-grid'),gw=g.offsetWidth,gh=g.offsetHeight;var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;so.mids.forEach(function(m){if(m[0]<minX)minX=m[0];if(m[1]<minY)minY=m[1];if(m[0]>maxX)maxX=m[0];if(m[1]>maxY)maxY=m[1]});var pad=40,rw=maxX-minX||1,rh=maxY-minY||1;var sx=(gw-pad*2)/rw,sy=(gh-pad*2)/rh,sc=Math.min(sx,sy);var ox=(gw-sc*rw)/2-minX*sc,oy=(gh-sc*rh)/2-minY*sc;so.mids.forEach(function(m,i){var d=document.createElement('div');d.className='pm-sn';d.style.left=(m[0]*sc+ox)+'px';d.style.top=(m[1]*sc+oy)+'px';d.textContent=i+1;c.appendChild(d)});}
 document.getElementById('pm').addEventListener('click',function(e){if(e.target===this)closePractice()});
 
 </script>
