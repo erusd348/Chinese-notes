@@ -168,22 +168,7 @@ c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();p
 c.onpointerup=c.onpointerleave=function(){drawing=false};
 }
 function parseStrokeType(path){var nums=path.match(/[\d.]+/g);if(!nums||nums.length<4)return'curve';var sx=parseFloat(nums[0]),sy=parseFloat(nums[1]);var fx=parseFloat(nums[2]),fy=parseFloat(nums[3]);var dx=fx-sx,dy=fy-sy,adx=Math.abs(dx),ady=Math.abs(dy);var dist=0;for(var k=0;k<nums.length-2;k+=2){var x1=parseFloat(nums[k]),y1=parseFloat(nums[k+1]),x2=parseFloat(nums[k+2]),y2=parseFloat(nums[k+3]);dist+=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))}if(dist<15)return'dot';if(adx>ady*3)return'horizontal';if(ady>adx*3)return'vertical';if(dx<0&&dy>0)return'leftFalling';if(dx>0&&dy>0)return'rightFalling';if(dx>0&&dy<0)return'rising';if(dx<0&&dy<0)return'hook';return'curve'}
-function loadStrokeOrder(ch,cb){
-if(soCache[ch]){cb(soCache[ch]);return}
-var url='https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/'+encodeURIComponent(ch)+'.json';
-fetch(url).then(function(r){return r.json()}).then(function(d){
-var types=d.strokes.map(parseStrokeType);
-var parts=[];
-types.forEach(function(t,i){parts.push((i+1)+'.'+STROKE_SYMBOLS[t]+' '+STROKE_NAMES[t])});
-var result={types:types,text:parts.join('  '),count:types.length};
-soCache[ch]=result;
-cb(result);
-}).catch(function(){
-var result={types:[],text:'(stroke data unavailable)',count:-1};
-soCache[ch]=result;
-cb(result);
-});
-}
+function loadStrokeOrder(ch,cb){if(soCache[ch]){cb(soCache[ch]);renderStrokeNumbers(soCache[ch]);return}var url='https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/'+encodeURIComponent(ch)+'.json';fetch(url).then(function(r){return r.json()}).then(function(d){var types=d.strokes.map(parseStrokeType);var parts=[];types.forEach(function(t,i){parts.push((i+1)+'.'+STROKE_SYMBOLS[t]+' '+STROKE_NAMES[t])});var mids=[];var meds=d.medians||[];for(var i=0;i<meds.length;i++){var pts=meds[i];if(pts&&pts.length>0){var mid=pts[Math.floor(pts.length/2)];mids.push([mid[0],mid[1]])}else{mids.push([0,0])}}var result={types:types,text:parts.join('  '),count:types.length,mids:mids};soCache[ch]=result;cb(result);renderStrokeNumbers(result)}).catch(function(){var result={types:[],text:'(stroke data unavailable)',count:-1};soCache[ch]=result;cb(result)})}
 function openPractice(t){
 for(var i=0;i<pChars.length;i++){if(pChars[i].word===t){curIdx=i;break}}
 document.getElementById('pm').classList.add('open');
