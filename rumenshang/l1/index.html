@@ -165,21 +165,7 @@ c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingCl
 c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
 c.onpointerup=c.onpointerleave=function(){drawing=false};
 }
-function parseStrokeType(path){
-var nums=path.match(/[\d.]+/g);
-if(!nums||nums.length<4)return'curve';
-var sx=parseFloat(nums[0]),sy=parseFloat(nums[1]);
-var ex=parseFloat(nums[nums.length-2]),ey=parseFloat(nums[nums.length-1]);
-var dx=ex-sx,dy=ey-sy,adx=Math.abs(dx),ady=Math.abs(dy);
-if(adx<4&&ady<4)return'dot';
-if(adx>ady*3)return'horizontal';
-if(ady>adx*3)return'vertical';
-if(dx<0&&dy>0)return'leftFalling';
-if(dx>0&&dy>0)return'rightFalling';
-if(dx>0&&dy<0)return'rising';
-if(adx>ady&&dy<0)return'hook';
-return'curve';
-}
+function parseStrokeType(path){var nums=path.match(/[\d.]+/g);if(!nums||nums.length<4)return'curve';var sx=parseFloat(nums[0]),sy=parseFloat(nums[1]);var fx=parseFloat(nums[2]),fy=parseFloat(nums[3]);var dx=fx-sx,dy=fy-sy,adx=Math.abs(dx),ady=Math.abs(dy);var dist=0;for(var k=0;k<nums.length-2;k+=2){var x1=parseFloat(nums[k]),y1=parseFloat(nums[k+1]),x2=parseFloat(nums[k+2]),y2=parseFloat(nums[k+3]);dist+=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))}if(dist<15)return'dot';if(adx>ady*3)return'horizontal';if(ady>adx*3)return'vertical';if(dx<0&&dy>0)return'leftFalling';if(dx>0&&dy>0)return'rightFalling';if(dx>0&&dy<0)return'rising';if(dx<0&&dy<0)return'hook';return'curve'}
 function loadStrokeOrder(ch,cb){
 if(soCache[ch]){cb(soCache[ch]);return}
 var url='https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/'+encodeURIComponent(ch)+'.json';
