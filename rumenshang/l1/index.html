@@ -22,23 +22,18 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 .practice-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;flex-direction:column}
 .practice-modal.open{display:flex}
 
-.pm-nav-btn{padding:4px 10px;border:1px solid #ddd;border-radius:4px;font-size:12px;cursor:pointer;background:#fff;font-family:KaiTi,楷体,serif}.pm-nav-btn:hover,.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
 .print-sheet{display:block!important;position:static;background:#fff;padding:20px}.print-sheet }
+
+.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
 
 .practice{width:28px;height:28px;border:none;border-radius:50%;background:#FFF3E0;color:#E65100;font-size:10px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold}.practice:hover{background:#E65100;color:#fff}
 .pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
 .pm-overlay.open{display:flex}
 .pm-panel{background:#fff;border-radius:12px;padding:18px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
-.pm-title{font-size:17px;color:#333;margin-bottom:2px}
-.pm-hint{font-size:11px;color:#999;margin-bottom:10px}
-.pm-grid{position:relative;width:280px;height:280px;margin:0 auto 10px;background:#fdf6f0;border:2px solid #c44;border-radius:4px;overflow:hidden}
-.pm-grid::before,.pm-grid::after{content:'';position:absolute;background:#d99;z-index:1;pointer-events:none}
-.pm-grid::before{left:0;top:50%;width:100%;height:1px}
-.pm-grid::after{left:50%;top:0;width:1px;height:100%}
-.pm-diag1,.pm-diag2{position:absolute;background:#ecc;z-index:1;pointer-events:none}
-.pm-diag1{left:0;top:0;width:141.4%;height:1px;transform-origin:0 0;transform:rotate(45deg)}
-.pm-diag2{left:0;top:0;width:141.4%;height:1px;transform-origin:100% 0;transform:rotate(-45deg)}
+.pm-title{font-size:17px;color:#333;margin-bottom:1px}
+.pm-hint{font-size:11px;color:#999;margin-bottom:6px;min-height:15px}
+.pm-grid{position:relative;width:280px;height:280px;margin:0 auto 10px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden}
 .pm-ref{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:160px;color:rgba(200,60,60,.1);font-family:KaiTi,STKaiti,楷体,serif;pointer-events:none;z-index:0;user-select:none;line-height:1}
 .pm-canvas{position:absolute;inset:0;z-index:2;cursor:crosshair;touch-action:none}
 .pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
@@ -84,9 +79,8 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 <div class="pm-panel">
 <div class="pm-nav" id="pmNav"></div>
 <div class="pm-title" id="pmTitle"></div>
-<div class="pm-hint" id="pmHint">Trace the character in the grid</div>
+<div class="pm-hint" id="pmHint">Stroke order loading...</div>
 <div class="pm-grid">
-<div class="pm-diag1"></div><div class="pm-diag2"></div>
 <div class="pm-ref" id="pmRef"></div>
 <canvas class="pm-canvas" id="pmCanvas"></canvas>
 </div>
@@ -143,9 +137,87 @@ document.getElementById('pmTitle').textContent=entry.word+' ('+ch+')';
 document.getElementById('pmRef').textContent=ch;
 clearCanvas();
 }
-function loadChar(i,ci){
-curIdx=i;showChar(ci||0);renderNav();
+
+
+
+var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;var soCache={};
+var STROKE_SYMBOLS={horizontal:'\u4e00',vertical:'\u4e28',dot:'\u4e36',leftFalling:'\u4e3f',rightFalling:'\u4e40',rising:'\u31c0',hook:'\u4e5b',curve:'\u4e5d',unknown:'?'};
+var STROKE_NAMES={horizontal:'horizontal',vertical:'vertical',dot:'dot',leftFalling:'left-falling',rightFalling:'right-falling',rising:'rising',hook:'hook',curve:'curve'};
+(function(){
+var bs=document.querySelectorAll('.practice');
+bs.forEach(function(b){
+var zh=b.parentElement.querySelector('.zh');
+if(zh){
+var chars=[];var t=zh.textContent.trim();
+for(var k=0;k<t.length;k++){chars.push(t[k])}
+var entry={word:t,chars:chars};
+var found=false;
+for(var j=0;j<pChars.length;j++){if(pChars[j].word===t){found=true;break}}
+if(!found)pChars.push(entry);
 }
+})
+})();
+function initCanvas(){
+var c=document.getElementById('pmCanvas'),g=document.querySelector('.pm-grid');
+c.width=g.offsetWidth;c.height=g.offsetHeight;
+pmCtx=c.getContext('2d');pmCtx.strokeStyle='#c00';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';
+c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingClientRect();pmCtx.moveTo(e.clientX-r.left,e.clientY-r.top)};
+c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
+c.onpointerup=c.onpointerleave=function(){drawing=false};
+}
+function parseStrokeType(path){
+var nums=path.match(/[\d.]+/g);
+if(!nums||nums.length<4)return'curve';
+var sx=parseFloat(nums[0]),sy=parseFloat(nums[1]);
+var ex=parseFloat(nums[nums.length-2]),ey=parseFloat(nums[nums.length-1]);
+var dx=ex-sx,dy=ey-sy,adx=Math.abs(dx),ady=Math.abs(dy);
+if(adx<4&&ady<4)return'dot';
+if(adx>ady*3)return'horizontal';
+if(ady>adx*3)return'vertical';
+if(dx<0&&dy>0)return'leftFalling';
+if(dx>0&&dy>0)return'rightFalling';
+if(dx>0&&dy<0)return'rising';
+if(adx>ady&&dy<0)return'hook';
+return'curve';
+}
+function loadStrokeOrder(ch,cb){
+if(soCache[ch]){cb(soCache[ch]);return}
+var url='https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/'+encodeURIComponent(ch)+'.json';
+fetch(url).then(function(r){return r.json()}).then(function(d){
+var types=d.strokes.map(parseStrokeType);
+var parts=[];
+types.forEach(function(t,i){parts.push((i+1)+'.'+STROKE_SYMBOLS[t]+' '+STROKE_NAMES[t])});
+var result={types:types,text:parts.join('  '),count:types.length};
+soCache[ch]=result;
+cb(result);
+}).catch(function(){
+var result={types:[],text:'(stroke data unavailable)',count:-1};
+soCache[ch]=result;
+cb(result);
+});
+}
+function openPractice(t){
+for(var i=0;i<pChars.length;i++){if(pChars[i].word===t){curIdx=i;break}}
+document.getElementById('pm').classList.add('open');
+showChar(0);
+renderNav();
+setTimeout(initCanvas,50);
+}
+function closePractice(){document.getElementById('pm').classList.remove('open')}
+function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
+function showChar(ci){
+var entry=pChars[curIdx];
+var ch=entry.chars[ci];
+entry._ci=ci;
+document.getElementById('pmTitle').textContent=entry.word+' \u2192 stroke '+ (ci+1) + '/' + entry.chars.length + ': '+ch;
+document.getElementById('pmRef').textContent=ch;
+document.getElementById('pmHint').textContent='Loading stroke order...';
+clearCanvas();
+loadStrokeOrder(ch,function(so){
+document.getElementById('pmHint').textContent='Stroke order: '+so.text;
+});
+}
+function loadChar(i,ci){curIdx=i;showChar(ci||0);renderNav()}
 function renderNav(){
 var nav=document.getElementById('pmNav'),h='';
 for(var i=0;i<pChars.length;i++){
@@ -170,11 +242,7 @@ if(all.indexOf(ch)<0)all.push(ch);
 }
 }
 for(var i=0;i<all.length;i++){
-h+='<div style="position:relative;width:110px;height:110px;display:inline-block;margin:6px;background:#fdf6f0;border:2px solid #c44;border-radius:4px">';
-h+='<div style="position:absolute;left:0;top:50%;width:100%;height:1px;background:#d99"></div>';
-h+='<div style="position:absolute;left:50%;top:0;width:1px;height:100%;background:#d99"></div>';
-h+='<div style="position:absolute;left:0;top:0;width:100%;height:1px;background:#ecc;transform:rotate(45deg);transform-origin:center"></div>';
-h+='<div style="position:absolute;left:0;top:0;width:100%;height:1px;background:#ecc;transform:rotate(-45deg);transform-origin:center"></div>';
+h+='<div style="position:relative;width:110px;height:110px;display:inline-block;margin:6px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px">';
 h+='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;color:rgba(200,60,60,.12);font-family:KaiTi,STKaiti,serif">'+all[i]+'</div>';
 h+='<div style="position:absolute;bottom:3px;width:100%;text-align:center;font-size:9px;color:#999">'+all[i]+'</div>';
 h+='</div>';
