@@ -26,7 +26,6 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 
 .print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
-
 .practice{width:28px;height:28px;border:none;border-radius:50%;background:#FFF3E0;color:#E65100;font-size:10px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold}.practice:hover{background:#E65100;color:#fff}
 .pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
 .pm-overlay.open{display:flex}
@@ -39,11 +38,12 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 .pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
 .pm-nav-btn{padding:5px 11px;border:1px solid #ddd;border-radius:4px;font-size:14px;cursor:pointer;background:#fff;font-family:KaiTi,STKaiti,楷体,serif;min-width:34px;text-align:center}.pm-nav-btn:hover{border-color:#E65100;color:#E65100}.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
 .pm-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
-.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}
+.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-replay{background:#e8f0fe;color:#1A56DB}.pm-btn-replay:hover{background:#d0e1fd}
 @media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 
-.pm-sn{position:absolute;width:22px;height:22px;border:1.5px solid rgba(200,60,60,.5);border-radius:50%;background:rgba(255,255,255,.75);color:#c33;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1;font-family:Arial,sans-serif;transform:translate(-50%,-50%)}
-</style></head>
+.pm-writer{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;pointer-events:none}.pm-writer svg{max-width:90%;max-height:90%}
+</style><script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.3/dist/hanzi-writer.min.js"></script>
+</head>
 <body>
 <div class="container">
 <a href="../" class="back">&larr; 返回目录</a>
@@ -74,8 +74,6 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 <div class="row" style="background:#FFF8F0"><button class="play" onclick="play('再见')">&#9654;</button><span class="zh" style="color:#8B5E3C">A: 再见！</span><span class="py" style="color:#8B5E3C">zài jiàn!</span><span class="en" style="color:#8B5E3C;font-style:italic">Goodbye!</span></div>
 <div class="row" style="background:#FFF8F0"><button class="play" onclick="play('再见')">&#9654;</button><span class="zh" style="color:#8B5E3C">B: 再见！</span><span class="py" style="color:#8B5E3C">zài jiàn!</span><span class="en" style="color:#8B5E3C;font-style:italic">Goodbye!</span></div>
 
-
-
 <div class="pm-overlay" id="pm">
 <div class="pm-panel">
 <div class="pm-nav" id="pmNav"></div>
@@ -83,10 +81,11 @@ h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
 <div class="pm-hint" id="pmHint">Stroke order loading...</div>
 <div class="pm-grid">
 <div class="pm-ref" id="pmRef"></div>
-<div id="pmNumbers" style="position:absolute;inset:0;z-index:1;pointer-events:none"></div>
+<div class="pm-writer" id="pmWriter"></div>
 <canvas class="pm-canvas" id="pmCanvas"></canvas>
 </div>
 <div class="pm-btns">
+<button class="pm-btn pm-btn-replay" onclick="replayWriter()">Replay</button>
 <button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button>
 <button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button>
 <button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button>
@@ -122,6 +121,20 @@ c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingCl
 c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
 c.onpointerup=c.onpointerleave=function(){drawing=false};
 }
+var writer=null;
+function showWriter(ch){
+var w=document.getElementById('pmWriter');w.innerHTML='';w.style.display='flex';
+document.getElementById('pmRef').style.display='none';
+if(writer){try{writer.cancel()}catch(e){}}
+try{
+writer=HanziWriter.create('pmWriter',ch,{width:240,height:240,padding:5,strokeAnimationSpeed:1.5,delayBetweenStrokes:350,radicalColor:'#1A56DB',strokeColor:'#333',showOutline:true,showCharacter:false,
+onLoadCharDataSuccess:function(){document.getElementById('pmHint').textContent='Watch, then trace!';},
+onLoadCharDataError:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex';document.getElementById('pmHint').textContent='Trace the character in the grid';}
+});
+writer.animateCharacter({onComplete:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}});
+}catch(e){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}
+}
+
 function openPractice(t){
 for(var i=0;i<pChars.length;i++){if(pChars[i].word===t){curIdx=i;break}}
 document.getElementById('pm').classList.add('open');
@@ -129,7 +142,8 @@ showChar(0);
 renderNav();
 setTimeout(initCanvas,50);
 }
-function closePractice(){document.getElementById('pm').classList.remove('open')}
+function closePractice(){if(writer){try{writer.cancel()}catch(e){}}document.getElementById('pm').classList.remove('open')}
+function replayWriter(){var entry=pChars[curIdx];var ch=entry.chars[entry._ci||0];document.getElementById('pmHint').textContent='Loading stroke data...';showWriter(ch)}
 function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
 function showChar(ci){
 var entry=pChars[curIdx];
@@ -140,9 +154,7 @@ document.getElementById('pmRef').textContent=ch;
 clearCanvas();
 }
 
-
-
-var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;var soCache={};
+var pChars=[];var curIdx=0;var pmCtx=null;var drawing=false;
 var STROKE_SYMBOLS={horizontal:'\u4e00',vertical:'\u4e28',dot:'\u4e36',leftFalling:'\u4e3f',rightFalling:'\u4e40',rising:'\u31c0',hook:'\u4e5b',curve:'\u4e5d',unknown:'?'};
 var STROKE_NAMES={horizontal:'horizontal',vertical:'vertical',dot:'dot',leftFalling:'left-falling',rightFalling:'right-falling',rising:'rising',hook:'hook',curve:'curve'};
 (function(){
@@ -167,8 +179,21 @@ c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingCl
 c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
 c.onpointerup=c.onpointerleave=function(){drawing=false};
 }
-function parseStrokeType(path){var nums=path.match(/[\d.]+/g);if(!nums||nums.length<4)return'curve';var sx=parseFloat(nums[0]),sy=parseFloat(nums[1]);var fx=parseFloat(nums[2]),fy=parseFloat(nums[3]);var dx=fx-sx,dy=fy-sy,adx=Math.abs(dx),ady=Math.abs(dy);var dist=0;for(var k=0;k<nums.length-2;k+=2){var x1=parseFloat(nums[k]),y1=parseFloat(nums[k+1]),x2=parseFloat(nums[k+2]),y2=parseFloat(nums[k+3]);dist+=Math.sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))}if(dist<15)return'dot';if(adx>ady*3)return'horizontal';if(ady>adx*3)return'vertical';if(dx<0&&dy>0)return'leftFalling';if(dx>0&&dy>0)return'rightFalling';if(dx>0&&dy<0)return'rising';if(dx<0&&dy<0)return'hook';return'curve'}
-function loadStrokeOrder(ch,cb){if(soCache[ch]){cb(soCache[ch]);renderStrokeNumbers(soCache[ch]);return}var url='https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/'+encodeURIComponent(ch)+'.json';fetch(url).then(function(r){return r.json()}).then(function(d){var types=d.strokes.map(parseStrokeType);var parts=[];types.forEach(function(t,i){parts.push((i+1)+'.'+STROKE_SYMBOLS[t]+' '+STROKE_NAMES[t])});var mids=[];var meds=d.medians||[];for(var i=0;i<meds.length;i++){var pts=meds[i];if(pts&&pts.length>0){var mid=pts[Math.floor(pts.length/2)];mids.push([mid[0],mid[1]])}else{mids.push([0,0])}}var result={types:types,text:parts.join('  '),count:types.length,mids:mids};soCache[ch]=result;cb(result);renderStrokeNumbers(result)}).catch(function(){var result={types:[],text:'(stroke data unavailable)',count:-1};soCache[ch]=result;cb(result)})}
+
+var writer=null;
+function showWriter(ch){
+var w=document.getElementById('pmWriter');w.innerHTML='';w.style.display='flex';
+document.getElementById('pmRef').style.display='none';
+if(writer){try{writer.cancel()}catch(e){}}
+try{
+writer=HanziWriter.create('pmWriter',ch,{width:240,height:240,padding:5,strokeAnimationSpeed:1.5,delayBetweenStrokes:350,radicalColor:'#1A56DB',strokeColor:'#333',showOutline:true,showCharacter:false,
+onLoadCharDataSuccess:function(){document.getElementById('pmHint').textContent='Watch, then trace!';},
+onLoadCharDataError:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex';document.getElementById('pmHint').textContent='Trace the character in the grid';}
+});
+writer.animateCharacter({onComplete:function(){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}});
+}catch(e){document.getElementById('pmWriter').style.display='none';document.getElementById('pmRef').style.display='flex'}
+}
+
 function openPractice(t){
 for(var i=0;i<pChars.length;i++){if(pChars[i].word===t){curIdx=i;break}}
 document.getElementById('pm').classList.add('open');
@@ -176,7 +201,8 @@ showChar(0);
 renderNav();
 setTimeout(initCanvas,50);
 }
-function closePractice(){document.getElementById('pm').classList.remove('open')}
+function closePractice(){if(writer){try{writer.cancel()}catch(e){}}document.getElementById('pm').classList.remove('open')}
+function replayWriter(){var entry=pChars[curIdx];var ch=entry.chars[entry._ci||0];document.getElementById('pmHint').textContent='Loading stroke data...';showWriter(ch)}
 function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
 function showChar(ci){
 var entry=pChars[curIdx];
@@ -222,7 +248,7 @@ h+='</div>';
 }
 s.innerHTML=h;window.print();
 }
-function renderStrokeNumbers(so){var c=document.getElementById('pmNumbers');c.innerHTML='';if(!so||!so.mids||!so.mids.length)return;var g=document.querySelector('.pm-grid'),gw=g.offsetWidth,gh=g.offsetHeight;var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;so.mids.forEach(function(m){if(m[0]<minX)minX=m[0];if(m[1]<minY)minY=m[1];if(m[0]>maxX)maxX=m[0];if(m[1]>maxY)maxY=m[1]});var pad=40,rw=maxX-minX||1,rh=maxY-minY||1;var sx=(gw-pad*2)/rw,sy=(gh-pad*2)/rh,sc=Math.min(sx,sy);var ox=(gw-sc*rw)/2-minX*sc,oy=(gh-sc*rh)/2-minY*sc;so.mids.forEach(function(m,i){var d=document.createElement('div');d.className='pm-sn';d.style.left=(m[0]*sc+ox)+'px';d.style.top=(m[1]*sc+oy)+'px';d.textContent=i+1;c.appendChild(d)});}
+
 document.getElementById('pm').addEventListener('click',function(e){if(e.target===this)closePractice()});
 
 </script>
