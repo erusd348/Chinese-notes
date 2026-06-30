@@ -305,64 +305,17 @@ if (window.speechSynthesis.onvoiceschanged !== undefined) {
 
 function play(i) {
   var text = typeof i === "number" ? texts[i] : i;
-  try {
-    // ① Try Edge TTS local server first (1s timeout, cached after first play)
-    var ctrl = new AbortController();
-    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
-    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
-      .then(function(resp) {
-        clearTimeout(t1);
-        if (!resp.ok) throw new Error('tts');
-        return resp.blob();
-      })
-      .then(function(blob) {
-        var p = document.getElementById('player');
-        p.src = URL.createObjectURL(blob);
-        p.play();
-      })
-      .catch(function() {
-        clearTimeout(t1);
-        speechOrGoogle(text);
-      });
-  } catch(e) {
-    // AbortController not supported → skip Edge TTS
-    speechOrGoogle(text);
+  var idx = typeof i === "number" ? i : texts.indexOf(i);
+  if (idx >= 0) {
+    var audio = document.getElementById("player");
+    audio.src = "audio/" + idx + ".mp3";
+    audio.play();
+    return;
   }
-}
-
-function speechOrGoogle(text) {
-  // ② Web Speech API → ③ Google Translate TTS
-  if (hz) {
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN';
-    u.rate = 0.9;
-    var voices = speechSynthesis.getVoices();
-    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
-    if (zhVoice) u.voice = zhVoice;
-    var fb = setTimeout(function() {
-      try { speechSynthesis.cancel(); } catch(e) {}
-      googleTTS(text);
-    }, 2500);
-    u.onstart = function() { clearTimeout(fb); };
-    u.onerror = function() {
-      clearTimeout(fb);
-      googleTTS(text);
-    };
-    try { speechSynthesis.cancel(); } catch(e) {}
-    try { speechSynthesis.speak(u); } catch(e) {
-      googleTTS(text);
-    }
-  } else {
-    googleTTS(text);
-  }
-}
-
-function googleTTS(text) {
-  var p = document.getElementById('player');
-  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  var p = document.getElementById("player");
+  p.src = "https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=" + encodeURIComponent(text) + "&client=tw-ob";
   p.play();
 }
-
 function playAll() {
   let i = 0;
   function n() {
