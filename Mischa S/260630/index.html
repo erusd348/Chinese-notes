@@ -282,7 +282,7 @@
           <span class="py">wǒ shì ruì shì rén</span>
           <span class="en">I am Swiss.</span>
         </div>
-<p class="footer" id="footerMsg">Detecting voice...</p>
+
 </div>
 
 <div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-panel"><div class="pm-nav" id="pmNav"></div><div class="pm-radical" id="pmRadical"></div><div class="pm-title-row"><span class="pm-title" id="pmTitle"></span><span class="pm-pinyin" id="pmPinyin"></span></div><div class="pm-hint" id="pmHint">Trace the character in the grid</div><div class="pm-grid"><canvas class="anim-canvas" id="animCanvas"></canvas><canvas class="pm-canvas" id="pmCanvas"></canvas></div><div class="pm-speed"><span>Speed:</span><input type="range" id="animSpeed" min="5" max="300" value="15"><span id="speedLabel">0.15x</span></div><div class="pm-btns"><button class="pm-btn pm-btn-anim" id="animPlayBtn" onclick="animToggle()">▶ Stroke</button><button class="pm-btn pm-btn-audio" onclick="playChar()">▶ Audio</button><button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button><button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button><button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button></div></div></div><div class="print-sheet" id="printSheet" style="display:none"></div>
@@ -290,7 +290,6 @@
 <audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
 <script>
 const texts = ['米夏','好的','熊猫','胸毛','瑞士','人','中国','国','瑞士人','咪虾','咪霞','咪虾','咪夏','迷虾','迷霞','迷虾','迷夏','米虾','米霞','米虾','米夏','蜜虾','蜜霞','蜜虾','蜜夏','我是米夏。','我是瑞士人。'];
-document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
 
 // Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
 var hz = false;
@@ -305,64 +304,17 @@ if (window.speechSynthesis.onvoiceschanged !== undefined) {
 
 function play(i) {
   var text = typeof i === "number" ? texts[i] : i;
-  try {
-    // ① Try Edge TTS local server first (1s timeout, cached after first play)
-    var ctrl = new AbortController();
-    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
-    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
-      .then(function(resp) {
-        clearTimeout(t1);
-        if (!resp.ok) throw new Error('tts');
-        return resp.blob();
-      })
-      .then(function(blob) {
-        var p = document.getElementById('player');
-        p.src = URL.createObjectURL(blob);
-        p.play();
-      })
-      .catch(function() {
-        clearTimeout(t1);
-        speechOrGoogle(text);
-      });
-  } catch(e) {
-    // AbortController not supported → skip Edge TTS
-    speechOrGoogle(text);
+  var idx = typeof i === "number" ? i : texts.indexOf(i);
+  if (idx >= 0) {
+    var audio = document.getElementById("player");
+    audio.src = "audio/" + idx + ".mp3";
+    audio.play();
+    return;
   }
-}
-
-function speechOrGoogle(text) {
-  // ② Web Speech API → ③ Google Translate TTS
-  if (hz) {
-    var u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN';
-    u.rate = 0.9;
-    var voices = speechSynthesis.getVoices();
-    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
-    if (zhVoice) u.voice = zhVoice;
-    var fb = setTimeout(function() {
-      try { speechSynthesis.cancel(); } catch(e) {}
-      googleTTS(text);
-    }, 2500);
-    u.onstart = function() { clearTimeout(fb); };
-    u.onerror = function() {
-      clearTimeout(fb);
-      googleTTS(text);
-    };
-    try { speechSynthesis.cancel(); } catch(e) {}
-    try { speechSynthesis.speak(u); } catch(e) {
-      googleTTS(text);
-    }
-  } else {
-    googleTTS(text);
-  }
-}
-
-function googleTTS(text) {
-  var p = document.getElementById('player');
-  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  var p = document.getElementById("player");
+  p.src = "https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=" + encodeURIComponent(text) + "&client=tw-ob";
   p.play();
 }
-
 function playAll() {
   let i = 0;
   function n() {
