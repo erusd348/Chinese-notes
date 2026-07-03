@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tanner G - 260128</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
+  .date{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+
+  .row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:8px}
+  .row.gram{border-bottom:1px solid #d0e1fd}
+  .zh{font-size:17px;font-weight:bold;flex:1;min-width:0;overflow:hidden;color:#333}
+  .py{font-size:13px;color:#999;flex:1;min-width:0;overflow:hidden;font-style:italic}
+  .en{font-size:13px;color:#555;flex:1;min-width:0;overflow:hidden;word-break:break-word}
+
+  .play{width:32px;height:32px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{background:#1A56DB;color:#fff}
+  .play-placeholder{width:32px;flex-shrink:0}
+
+  .play-all{display:block;margin:0 auto 16px;padding:9px 24px;border:none;border-radius:8px;background:#1A56DB;color:#fff;font-size:14px;cursor:pointer}
+  .play-all:hover{background:#1548b8}
+  .sec{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
+  .back{display:inline-block;color:#1A56DB;text-decoration:none;font-size:13px;margin-bottom:10px}.back:hover{text-decoration:underline}
+  .lesson-label{text-align:center;color:#1A56DB;font-size:13px;font-weight:bold;padding:10px 0 6px;margin-top:8px;border-top:2px solid #1A56DB}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:16px}
+
+
+
+/* --- Hanzi Practice --- */
+.practice{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px}
+.practice:hover{background:#1A56DB;color:#fff}
+.pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
+.pm-overlay.open{display:flex}
+.pm-panel{background:#fff;border-radius:12px;padding:18px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
+.pm-radical{font-size:11px;color:#168F16;margin-bottom:2px;min-height:15px;font-weight:bold}
+.pm-title-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1px}
+.pm-title{font-size:17px;color:#333}
+.pm-pinyin{font-size:13px;color:#999;font-style:italic}
+.pm-grid{position:relative;width:280px;height:280px;margin:0 auto 10px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden}
+.anim-canvas{position:absolute;inset:0;z-index:2;pointer-events:none}
+.pm-canvas{position:absolute;inset:0;z-index:3;cursor:crosshair;touch-action:none}
+.pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.pm-nav-btn{padding:5px 11px;border:1px solid #ddd;border-radius:4px;font-size:14px;cursor:pointer;background:#fff;font-family:KaiTi,STKaiti,楷体,serif;min-width:34px;text-align:center}.pm-nav-btn:hover{border-color:#E65100;color:#E65100}.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
+.pm-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-audio{background:#E8F0FE;color:#1A56DB}.pm-btn-audio:hover{background:#1A56DB;color:#fff}
+.pm-btn-anim{background:#43A047;color:#fff}.pm-btn-anim:hover{background:#2E7D32}.pm-speed{display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0 2px;font-size:11px;color:#888}
+.pm-speed input{width:80px;cursor:pointer}
+@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
+
+/* --- Flashcard --- */
+.fc-btn{display:inline-block;margin:0 8px;padding:9px 24px;border:none;border-radius:8px;background:#E67E22;color:#fff;font-size:14px;cursor:pointer;vertical-align:middle}
+.fc-btn:hover{background:#D35400}
+.fc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:999;justify-content:center;align-items:center}
+.fc-overlay.show{display:flex}
+.fc-box{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center}
+.fc-card-wrap{perspective:800px;margin:16px 0}
+.fc-card{width:200px;height:260px;margin:0 auto;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px}
+.fc-front{background:#E8F0FE;color:#1A56DB}
+.fc-front .fc-zh{font-size:52px;margin-bottom:12px}
+.fc-front .fc-hint{font-size:12px;color:#999}
+.fc-back{background:#F0F8E8;transform:rotateY(180deg)}
+.fc-back .fc-py{font-size:22px;color:#1A56DB;margin-bottom:8px}
+.fc-back .fc-en{font-size:16px;color:#555}
+.fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.fc-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333}
+.fc-actions button:hover{background:#E8F0FE;color:#1A56DB}
+.fc-primary{background:#E67E22!important;color:#fff!important;border-color:#E67E22!important}
+.fc-primary:hover{background:#D35400!important;color:#fff!important}
+.fc-counter{font-size:12px;color:#999;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../">&larr; Back</a>
+<h1>Tanner G - Class Notes</h1>
+<p class="date">260128 &nbsp;|&nbsp; 🔊 Click ▶ to hear pronunciation</p>
+<button class="play-all" onclick="playAll()">▶ Play All Vocabulary &amp; Sentences</button><button class="fc-btn" onclick="openFlashcard()">🃏 Flashcards</button>
+
+
+        <div class="sec">&#128214; Vocabulary</div>
+
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(0)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">锻炼</span>
+          <span class="py">duànliàn</span>
+          <span class="en">to exercise</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(1)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">一会儿</span>
+          <span class="py">yīhuìr</span>
+          <span class="en">a little while, a moment</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(2)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">细</span>
+          <span class="py">xì</span>
+          <span class="en">thin, fine</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(3)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">粗</span>
+          <span class="py">cū</span>
+          <span class="en">thick, coarse</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(4)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">宽</span>
+          <span class="py">kuān</span>
+          <span class="en">wide, broad</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(5)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">窄</span>
+          <span class="py">zhǎi</span>
+          <span class="en">narrow</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(6)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">厚</span>
+          <span class="py">hòu</span>
+          <span class="en">thick (for objects)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(7)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">薄</span>
+          <span class="py">báo/bó</span>
+          <span class="en">thin (for objects)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(8)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">长</span>
+          <span class="py">cháng</span>
+          <span class="en">long</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(9)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">短</span>
+          <span class="py">duǎn</span>
+          <span class="en">short</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(10)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">高</span>
+          <span class="py">gāo</span>
+          <span class="en">tall, high</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(11)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">矮</span>
+          <span class="py">ǎi</span>
+          <span class="en">short (in stature)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(12)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">重</span>
+          <span class="py">zhòng</span>
+          <span class="en">heavy</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(13)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">轻</span>
+          <span class="py">qīng</span>
+          <span class="en">light (not heavy)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(14)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">年轻</span>
+          <span class="py">niánqīng</span>
+          <span class="en">young</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(15)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">光年</span>
+          <span class="py">guāngnián</span>
+          <span class="en">light-year</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(16)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">变</span>
+          <span class="py">biàn</span>
+          <span class="en">to become, to change</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(17)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">巧克力</span>
+          <span class="py">qiǎokèlì</span>
+          <span class="en">chocolate</span>
+        </div>
+        <div class="sec">&#128172; Sentences</div>
+
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(18)">▶</button>
+          
+          <span class="zh">雪没（融）化。</span>
+          <span class="py">Xuě méi (róng)huà.</span>
+          <span class="en">The snow hasn&#x27;t melted.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(19)">▶</button>
+          
+          <span class="zh">快吃，冰淇淋要化了。</span>
+          <span class="py">Kuài chī, bīngqílín yào huà le.</span>
+          <span class="en">Eat quickly, the ice cream is about to melt.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(20)">▶</button>
+          
+          <span class="zh">我锻炼了40分钟。</span>
+          <span class="py">Wǒ duànliàn le sìshí fēnzhōng.</span>
+          <span class="en">I exercised for forty minutes.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(21)">▶</button>
+          
+          <span class="zh">我锻炼了一会儿。</span>
+          <span class="py">Wǒ duànliàn le yīhuìr.</span>
+          <span class="en">I exercised for a while.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(22)">▶</button>
+          
+          <span class="zh">你吃宽的还是吃细的？</span>
+          <span class="py">Nǐ chī kuān de háishì chī xì de?</span>
+          <span class="en">Are you eating the broad ones or the thin ones? ```</span>
+        </div>
+<p class="footer" id="footerMsg">Detecting voice...</p>
+</div>
+
+<div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-panel"><div class="pm-nav" id="pmNav"></div><div class="pm-radical" id="pmRadical"></div><div class="pm-title-row"><span class="pm-title" id="pmTitle"></span><span class="pm-pinyin" id="pmPinyin"></span></div><div class="pm-hint" id="pmHint">Trace the character in the grid</div><div class="pm-grid"><canvas class="anim-canvas" id="animCanvas"></canvas><canvas class="pm-canvas" id="pmCanvas"></canvas></div><div class="pm-speed"><span>Speed:</span><input type="range" id="animSpeed" min="5" max="300" value="15"><span id="speedLabel">0.15x</span></div><div class="pm-btns"><button class="pm-btn pm-btn-anim" id="animPlayBtn" onclick="animToggle()">▶ Stroke</button><button class="pm-btn pm-btn-audio" onclick="playChar()">▶ Audio</button><button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button><button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button><button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button></div></div></div><div class="print-sheet" id="printSheet" style="display:none"></div>
+<div class="fc-overlay" id="fcOverlay" onclick="if(event.target===this)closeFlashcard()"><div class="fc-box"><h3 style="color:#1A56DB;margin-bottom:4px">🃏 Flashcards</h3><div class="fc-card-wrap"><div class="fc-card" id="fcCard" onclick="flipCard()"><div class="fc-front"><div class="fc-zh" id="fcZh"></div><div class="fc-hint">Click to flip</div></div><div class="fc-back"><div class="fc-py" id="fcPy"></div><div class="fc-en" id="fcEn"></div></div></div></div><div class="fc-actions"><button onclick="flipCard()">Space</button><button onclick="prevCard()">←</button><button onclick="nextCard()">→</button><button onclick="shuffleCards()">🔀</button><button class="fc-primary" onclick="playCard()">▶</button><button onclick="closeFlashcard()">✕</button></div><div class="fc-counter" id="fcCounter"></div></div></div>
+<audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+const texts = ['锻炼','一会儿','细','粗','宽','窄','厚','薄','长','短','高','矮','重','轻','年轻','光年','变','巧克力','雪没（融）化。','快吃，冰淇淋要化了。','我锻炼了40分钟。','我锻炼了一会儿。','你吃宽的还是吃细的？'];
+document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
+
+// Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
+var hz = false;
+function cv() {
+  var v = window.speechSynthesis.getVoices();
+  hz = v.some(function(x) { return x.lang.startsWith('zh'); });
+}
+cv();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = cv;
+}
+
+function play(i) {
+  var text = typeof i === "number" ? texts[i] : i;
+  try {
+    // ① Try Edge TTS local server first (1s timeout, cached after first play)
+    var ctrl = new AbortController();
+    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
+    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
+      .then(function(resp) {
+        clearTimeout(t1);
+        if (!resp.ok) throw new Error('tts');
+        return resp.blob();
+      })
+      .then(function(blob) {
+        var p = document.getElementById('player');
+        p.src = URL.createObjectURL(blob);
+        p.play();
+      })
+      .catch(function() {
+        clearTimeout(t1);
+        speechOrGoogle(text);
+      });
+  } catch(e) {
+    // AbortController not supported → skip Edge TTS
+    speechOrGoogle(text);
+  }
+}
+
+function speechOrGoogle(text) {
+  // ② Web Speech API → ③ Google Translate TTS
+  if (hz) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.9;
+    var voices = speechSynthesis.getVoices();
+    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
+    if (zhVoice) u.voice = zhVoice;
+    var fb = setTimeout(function() {
+      try { speechSynthesis.cancel(); } catch(e) {}
+      googleTTS(text);
+    }, 2500);
+    u.onstart = function() { clearTimeout(fb); };
+    u.onerror = function() {
+      clearTimeout(fb);
+      googleTTS(text);
+    };
+    try { speechSynthesis.cancel(); } catch(e) {}
+    try { speechSynthesis.speak(u); } catch(e) {
+      googleTTS(text);
+    }
+  } else {
+    googleTTS(text);
+  }
+}
+
+function googleTTS(text) {
+  var p = document.getElementById('player');
+  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  p.play();
+}
+
+function playAll() {
+  let i = 0;
+  function n() {
+    if (i >= texts.length) return;
+    play(i);
+    i++;
+    setTimeout(n, 1300);
+  }
+  n();
+}
+
+
+/* ---- Hanzi Practice ---- */var PINYIN_RE=/[aāáǎà]i|[aāáǎà]ng?|[aāáǎà]o?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[aāáǎà][io]?|[bpmf]?[oōóǒò]u?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]i?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[iīíǐì][aāáǎàoōóǒòeēéěèuūúǔù]?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[oōóǒò]ng|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[uūúǔù][aāáǎàoōóǒòeēéěèiīíǐì]?n?g?|[nlgkhjqxzcsry]?[üǖǘǚǜ][eēéěè]?n?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]r|[eēéěè]r/g;
+var STROKE_DATA={"一":{"medians":[[[121, 393], [193, 372], [417, 402], [827, 434], [920, 401]]],"bounds":{"minX": 121, "maxX": 920, "minY": 372, "maxY": 434}},"了":{"medians":[[[228, 705], [296, 678], [401, 712], [502, 736], [666, 768], [699, 764], [716, 739], [721, 715], [534, 568], [513, 563]], [[461, 574], [532, 506], [551, 451], [564, 290], [556, 153], [541, 101], [515, 68], [470, 84], [367, 141]]],"bounds":{"minX": 228, "maxX": 721, "minY": 68, "maxY": 768}},"会":{"medians":[[[458, 808], [481, 786], [492, 764], [455, 682], [395, 587], [314, 487], [249, 421], [160, 350], [95, 309]], [[510, 704], [518, 685], [646, 553], [785, 436], [825, 419], [990, 388]], [[354, 417], [377, 410], [414, 410], [575, 445], [628, 445]], [[207, 269], [260, 261], [480, 298], [705, 323], [784, 304]], [[497, 250], [456, 237], [410, 164], [347, 89], [335, 52], [393, 55], [646, 114], [660, 107]], [[615, 195], [725, 86], [748, 46], [756, 11]]],"bounds":{"minX": 95, "maxX": 990, "minY": 11, "maxY": 808}},"你":{"medians":[[[317, 812], [342, 786], [353, 759], [303, 663], [249, 577], [181, 485], [93, 386], [68, 367]], [[273, 558], [274, 525], [285, 495], [284, 441], [273, 243], [256, 123], [260, 41]], [[556, 828], [574, 817], [595, 783], [584, 746], [539, 640], [481, 531], [428, 453], [406, 431]], [[513, 532], [704, 585], [796, 597], [813, 585], [827, 563], [798, 519], [746, 460]], [[586, 463], [615, 438], [632, 412], [627, 73], [616, 41], [604, 30], [558, 47], [490, 85]], [[455, 316], [437, 243], [397, 151]], [[742, 326], [812, 265], [856, 216], [871, 190], [878, 154]]],"bounds":{"minX": 68, "maxX": 878, "minY": 30, "maxY": 828}},"儿":{"medians":[[[317, 651], [326, 648], [363, 606], [351, 422], [330, 317], [293, 219], [259, 165], [191, 94], [134, 59]], [[535, 738], [564, 719], [598, 671], [580, 233], [590, 142], [613, 93], [659, 65], [704, 53], [744, 51], [839, 55], [905, 80], [917, 89], [922, 130], [925, 264]]],"bounds":{"minX": 134, "maxX": 925, "minY": 51, "maxY": 738}},"光":{"medians":[[[461, 803], [511, 760], [498, 490], [495, 469], [477, 449]], [[293, 606], [372, 540], [382, 517]], [[696, 707], [717, 683], [724, 661], [639, 585], [578, 540]], [[167, 389], [219, 381], [390, 413], [757, 458], [808, 452], [847, 440]], [[385, 359], [406, 318], [369, 234], [334, 178], [247, 88], [174, 38], [113, 8]], [[514, 400], [543, 383], [564, 350], [551, 270], [545, 156], [556, 68], [571, 39], [613, 14], [667, 5], [759, 2], [846, 13], [902, 33], [912, 40], [914, 54], [915, 225]]],"bounds":{"minX": 113, "maxX": 915, "minY": 2, "maxY": 803}},"克":{"medians":[[[264, 632], [319, 623], [637, 682], [686, 684], [721, 677]], [[452, 840], [492, 797], [451, 533], [431, 512]], [[263, 489], [289, 470], [307, 438], [339, 295]], [[318, 489], [342, 477], [441, 490], [556, 516], [598, 514], [634, 475], [602, 400], [564, 372]], [[357, 305], [377, 317], [565, 345], [622, 348], [646, 339]], [[366, 266], [384, 224], [358, 175], [319, 123], [240, 58], [154, 16]], [[490, 313], [527, 285], [535, 269], [524, 157], [531, 65], [555, 28], [602, 6], [656, -3], [766, -5], [843, 6], [898, 29], [903, 81], [900, 194]]],"bounds":{"minX": 154, "maxX": 903, "minY": -5, "maxY": 840}},"冰":{"medians":[[[158, 658], [242, 591], [267, 547]], [[127, 101], [117, 137], [119, 177], [256, 412]], [[524, 817], [581, 770], [572, 502], [576, 106], [553, 52], [512, 64], [423, 108]], [[270, 466], [325, 458], [413, 482], [443, 478], [460, 467], [453, 434], [430, 379], [371, 269], [297, 177], [207, 105]], [[758, 653], [778, 631], [783, 606], [665, 479], [621, 444]], [[602, 456], [618, 422], [648, 390], [712, 325], [815, 236], [980, 209]]],"bounds":{"minX": 117, "maxX": 980, "minY": 52, "maxY": 817}},"分":{"medians":[[[333, 687], [347, 674], [362, 642], [306, 551], [231, 465], [158, 407], [100, 373]], [[454, 803], [495, 791], [527, 765], [659, 579], [707, 524], [757, 480], [783, 463], [819, 454], [978, 435]], [[251, 378], [303, 368], [607, 435], [626, 429], [646, 410], [634, 299], [609, 167], [591, 110], [565, 64], [541, 41], [523, 39], [420, 94]], [[398, 358], [424, 334], [391, 252], [355, 194], [319, 149], [261, 96], [200, 54], [156, 32]]],"bounds":{"minX": 100, "maxX": 978, "minY": 32, "maxY": 803}},"力":{"medians":[[[228, 521], [269, 505], [303, 506], [709, 577], [724, 574], [757, 546], [720, 306], [689, 188], [654, 109], [627, 80], [604, 71], [498, 138]], [[478, 795], [511, 768], [524, 742], [490, 513], [468, 435], [436, 355], [382, 260], [319, 184], [244, 120], [127, 53]]],"bounds":{"minX": 127, "maxX": 757, "minY": 53, "maxY": 795}},"化":{"medians":[[[345, 784], [362, 769], [382, 734], [330, 634], [266, 534], [196, 442], [120, 357], [83, 327]], [[273, 494], [276, 465], [294, 433], [297, 388], [289, 194], [278, 94], [284, 41]], [[751, 668], [770, 638], [776, 611], [690, 509], [534, 367], [481, 325], [407, 282]], [[496, 758], [528, 740], [552, 705], [535, 549], [524, 283], [533, 177], [543, 144], [557, 122], [591, 99], [675, 81], [774, 84], [832, 93], [865, 105], [894, 131], [896, 287]]],"bounds":{"minX": 83, "maxX": 896, "minY": 41, "maxY": 784}},"厚":{"medians":[[[351, 779], [377, 767], [418, 765], [729, 809], [774, 807]], [[281, 796], [303, 777], [322, 745], [295, 548], [254, 367], [226, 291], [168, 176], [119, 105], [65, 47]], [[408, 658], [434, 638], [443, 617], [476, 475]], [[463, 654], [479, 645], [662, 678], [714, 674], [741, 640], [691, 497]], [[480, 561], [489, 570], [514, 575], [608, 589], [640, 586]], [[492, 487], [503, 497], [514, 494], [638, 512], [671, 522]], [[423, 405], [461, 391], [480, 393], [631, 435], [676, 437], [700, 409], [685, 386], [612, 317], [601, 318]], [[548, 311], [572, 303], [598, 282], [616, 245], [633, 164], [629, 70], [611, 30], [589, 9], [490, 50]], [[285, 211], [339, 196], [529, 228], [861, 262], [934, 238]]],"bounds":{"minX": 65, "maxX": 934, "minY": 9, "maxY": 809}},"变":{"medians":[[[438, 831], [517, 795], [535, 781], [554, 753]], [[213, 645], [260, 636], [492, 675], [737, 700], [778, 695], [816, 682]], [[390, 636], [419, 614], [419, 517], [406, 430], [411, 392]], [[571, 654], [594, 634], [591, 473], [599, 400]], [[299, 563], [272, 490], [214, 392]], [[665, 568], [737, 532], [794, 495], [830, 443]], [[311, 310], [364, 304], [425, 310], [562, 340], [600, 338], [630, 322], [618, 284], [574, 198], [533, 144], [479, 95], [418, 59], [358, 34], [286, 14], [206, 5]], [[362, 244], [421, 219], [586, 75], [687, 14], [718, 2], [799, -6], [903, -6]]],"bounds":{"minX": 206, "maxX": 903, "minY": -6, "maxY": 831}},"吃":{"medians":[[[98, 547], [124, 524], [130, 511], [172, 271]], [[157, 526], [167, 536], [196, 547], [285, 573], [322, 546], [295, 417], [271, 399]], [[189, 337], [199, 352], [270, 373], [329, 372]], [[551, 832], [586, 791], [550, 687], [533, 650], [484, 575], [399, 489]], [[513, 575], [636, 588], [766, 625], [805, 627], [820, 621]], [[446, 377], [504, 385], [587, 417], [621, 416], [637, 403], [615, 361], [515, 222], [486, 141], [485, 106], [500, 69], [530, 43], [566, 28], [653, 13], [754, 15], [829, 30], [889, 54], [917, 73], [938, 234]]],"bounds":{"minX": 98, "maxX": 938, "minY": 13, "maxY": 832}},"宽":{"medians":[[[453, 849], [533, 808], [552, 782]], [[237, 722], [245, 695], [242, 683], [193, 591], [186, 546]], [[268, 669], [282, 680], [456, 710], [745, 740], [774, 728], [794, 703], [749, 636], [740, 633]], [[273, 535], [330, 532], [631, 586], [677, 583], [698, 575]], [[367, 636], [399, 612], [417, 506]], [[553, 677], [576, 648], [538, 507]], [[337, 434], [366, 396], [365, 304], [353, 239], [356, 183]], [[372, 434], [404, 420], [549, 453], [597, 453], [625, 421], [619, 372], [620, 268], [611, 196]], [[448, 376], [467, 366], [493, 335], [473, 214], [436, 123], [405, 81], [357, 43], [263, 5], [216, 1]], [[522, 191], [545, 162], [542, 61], [557, 19], [604, -7], [685, -17], [787, -5], [822, 8], [853, 31], [864, 200]]],"bounds":{"minX": 186, "maxX": 864, "minY": -17, "maxY": 849}},"巧":{"medians":[[[155, 644], [186, 640], [250, 649], [358, 681], [427, 690]], [[271, 629], [299, 605], [299, 569], [293, 412], [270, 384]], [[97, 302], [122, 293], [159, 290], [440, 438]], [[495, 688], [563, 683], [863, 743], [917, 736]], [[611, 661], [641, 641], [644, 633], [619, 554], [572, 441], [616, 437], [772, 465], [793, 461], [815, 445], [824, 435], [826, 418], [815, 325], [797, 244], [762, 148], [736, 103], [685, 59], [584, 123]]],"bounds":{"minX": 97, "maxX": 917, "minY": 59, "maxY": 743}},"年":{"medians":[[[375, 845], [402, 804], [358, 712], [298, 635], [267, 604], [216, 567]], [[385, 693], [473, 691], [689, 735], [735, 733]], [[345, 510], [379, 494], [665, 542], [733, 534]], [[287, 518], [318, 492], [328, 470], [342, 358], [346, 345], [361, 332]], [[83, 293], [109, 281], [158, 275], [451, 316], [815, 347], [872, 341], [929, 318]], [[490, 668], [536, 641], [544, 630], [531, -76]]],"bounds":{"minX": 83, "maxX": 929, "minY": -76, "maxY": 845}},"快":{"medians":[[[157, 510], [153, 429], [133, 333]], [[316, 537], [329, 525], [378, 502], [407, 466]], [[245, 784], [297, 729], [283, 212], [267, 62], [267, -26]], [[438, 544], [503, 544], [611, 566], [695, 592], [734, 587], [765, 558], [728, 427], [699, 399]], [[365, 340], [413, 332], [625, 369], [843, 392], [889, 388], [931, 376]], [[539, 776], [566, 758], [590, 728], [568, 375], [547, 245], [521, 174], [473, 105], [405, 55], [328, 23]], [[589, 328], [605, 284], [663, 205], [716, 139], [790, 67], [818, 47], [962, 18]]],"bounds":{"minX": 133, "maxX": 962, "minY": -26, "maxY": 784}},"我":{"medians":[[[458, 627], [392, 631], [336, 588], [274, 552], [258, 550], [253, 542], [220, 530], [212, 532], [203, 522]], [[174, 404], [215, 398], [241, 402], [672, 514], [742, 512]], [[323, 556], [351, 542], [365, 522], [361, 116], [340, 67], [246, 113]], [[100, 206], [124, 195], [163, 189], [492, 334]], [[492, 807], [537, 760], [538, 627], [569, 435], [612, 299], [676, 170], [717, 112], [779, 48], [817, 22], [859, 12], [880, 78], [891, 140], [886, 147], [894, 173]], [[723, 412], [737, 365], [664, 259], [594, 198], [489, 142], [454, 132]], [[657, 710], [750, 668], [781, 634]]],"bounds":{"minX": 100, "maxX": 894, "minY": 12, "maxY": 807}},"是":{"medians":[[[342, 759], [364, 740], [376, 720], [420, 502]], [[394, 757], [412, 747], [476, 764], [607, 781], [645, 772], [660, 757], [669, 744], [629, 579], [615, 543], [619, 524]], [[425, 631], [451, 644], [532, 660], [567, 655]], [[441, 528], [450, 537], [566, 554], [581, 562]], [[146, 393], [193, 384], [441, 427], [792, 467], [827, 464], [880, 449]], [[483, 412], [517, 380], [509, 187], [512, 167], [528, 144]], [[545, 268], [578, 283], [666, 303], [715, 300]], [[318, 346], [345, 311], [321, 251], [286, 189], [249, 136], [196, 78], [126, 22]], [[357, 242], [359, 226], [368, 218], [463, 149], [583, 75], [686, 28], [709, 20], [755, 18], [880, 26], [907, 34]]],"bounds":{"minX": 126, "maxX": 907, "minY": 18, "maxY": 781}},"没":{"medians":[[[244, 781], [332, 722], [352, 685]], [[145, 579], [216, 531], [237, 501]], [[203, 55], [190, 95], [190, 143], [340, 403]], [[445, 738], [466, 726], [481, 706], [482, 644], [473, 583], [435, 506], [402, 469], [356, 437]], [[518, 726], [530, 716], [643, 748], [679, 745], [694, 728], [677, 671], [670, 592], [674, 544], [684, 522], [706, 506], [729, 499], [779, 497], [851, 507], [887, 499]], [[468, 392], [512, 393], [644, 430], [666, 419], [680, 400], [663, 326], [641, 270], [615, 224], [574, 171], [537, 144], [474, 113], [394, 87], [337, 78]], [[404, 342], [445, 325], [466, 309], [634, 141], [748, 59], [766, 50], [833, 39], [971, 27]]],"bounds":{"minX": 145, "maxX": 971, "minY": 27, "maxY": 781}},"淇":{"medians":[[[188, 728], [260, 678], [285, 634]], [[116, 546], [177, 496], [192, 465]], [[173, 66], [163, 88], [156, 151], [285, 407]], [[359, 595], [368, 590], [445, 587], [650, 623], [756, 648], [807, 647]], [[412, 752], [455, 704], [462, 648], [466, 286], [450, 272]], [[627, 823], [660, 799], [681, 770], [662, 311], [643, 289]], [[488, 465], [501, 479], [543, 491], [600, 490]], [[493, 353], [505, 369], [529, 375], [577, 379], [603, 373]], [[278, 236], [328, 226], [527, 254], [832, 279], [890, 274], [935, 259]], [[506, 151], [472, 146], [388, 52], [341, 15], [288, -14]], [[633, 182], [768, 67], [794, 28], [805, -10]]],"bounds":{"minX": 116, "maxX": 935, "minY": -14, "maxY": 823}},"淋":{"medians":[[[162, 699], [239, 647], [259, 610]], [[84, 494], [147, 450], [164, 423]], [[143, 66], [130, 100], [127, 132], [234, 364]], [[259, 461], [318, 461], [468, 505], [517, 507]], [[369, 757], [417, 705], [407, 213], [394, 65], [397, 2]], [[383, 450], [369, 383], [340, 324], [305, 262], [224, 160]], [[438, 381], [445, 371], [509, 331], [525, 306]], [[557, 507], [580, 502], [636, 505], [720, 522], [814, 550], [862, 549]], [[637, 815], [691, 761], [692, 287], [680, 62], [684, -24]], [[665, 481], [658, 475], [648, 403], [601, 306], [530, 206], [467, 148]], [[719, 419], [724, 397], [800, 297], [867, 221], [991, 184]]],"bounds":{"minX": 84, "maxX": 991, "minY": -24, "maxY": 815}},"炼":{"medians":[[[128, 572], [143, 490], [144, 402]], [[386, 647], [401, 617], [311, 536], [308, 521]], [[226, 771], [254, 753], [279, 725], [275, 500], [256, 285], [225, 186], [189, 123], [147, 81], [75, 39]], [[288, 311], [347, 266], [375, 224]], [[470, 623], [493, 617], [547, 618], [639, 634], [748, 666], [808, 666]], [[594, 807], [608, 795], [627, 763], [538, 470], [496, 383], [490, 356], [531, 350], [808, 390], [836, 390], [865, 381]], [[462, 482], [527, 484], [645, 514], [667, 501], [680, 483], [675, 444], [675, 83], [664, 32], [651, 16], [622, 23], [538, 66]], [[494, 250], [473, 194], [411, 92]], [[765, 264], [876, 171], [892, 145], [902, 111]]],"bounds":{"minX": 75, "maxX": 902, "minY": 16, "maxY": 807}},"的":{"medians":[[[278, 780], [303, 766], [314, 753], [313, 740], [225, 565], [216, 559], [212, 543], [196, 533]], [[135, 540], [157, 518], [174, 485], [185, 219], [196, 166]], [[188, 518], [225, 512], [356, 552], [381, 543], [400, 520], [391, 288], [382, 213], [365, 182], [369, 130]], [[208, 364], [225, 372], [291, 383], [325, 382]], [[215, 177], [231, 194], [292, 202], [323, 214]], [[630, 839], [651, 822], [672, 790], [648, 723], [613, 651], [534, 518], [470, 444]], [[577, 537], [775, 572], [805, 568], [834, 541], [827, 499], [816, 261], [801, 171], [772, 87], [753, 58], [719, 32], [621, 94], [619, 102], [604, 107]], [[517, 386], [594, 325], [619, 279]]],"bounds":{"minX": 135, "maxX": 834, "minY": 32, "maxY": 839}},"短":{"medians":[[[262, 774], [293, 741], [296, 729], [283, 692], [211, 554], [138, 462]], [[241, 553], [322, 562], [406, 588], [454, 589]], [[60, 347], [120, 339], [405, 411], [468, 411]], [[287, 533], [328, 497], [311, 357], [284, 252], [259, 194], [197, 112], [144, 71], [109, 54]], [[325, 286], [394, 229], [412, 197]], [[534, 694], [558, 688], [596, 689], [753, 727], [824, 732]], [[490, 542], [516, 521], [525, 503], [560, 338]], [[543, 540], [564, 530], [737, 567], [762, 563], [793, 530], [757, 452], [727, 432]], [[580, 369], [593, 384], [727, 406], [770, 407], [795, 399]], [[527, 272], [566, 218], [575, 192]], [[731, 342], [746, 331], [762, 297], [696, 156], [675, 140]], [[374, 93], [425, 83], [602, 110], [869, 134], [917, 129], [962, 114]]],"bounds":{"minX": 60, "maxX": 962, "minY": 54, "maxY": 774}},"矮":{"medians":[[[277, 784], [302, 760], [311, 737], [281, 665], [238, 585], [190, 513], [131, 447]], [[218, 514], [284, 526], [385, 562], [430, 566]], [[69, 336], [115, 331], [355, 398], [417, 401]], [[259, 495], [290, 476], [300, 461], [289, 349], [263, 261], [220, 189], [201, 168], [169, 139], [102, 98]], [[315, 246], [372, 201], [391, 162]], [[763, 743], [700, 751], [634, 705], [580, 677], [567, 677], [560, 668], [544, 667], [528, 657], [517, 660], [508, 650]], [[474, 557], [533, 555], [761, 613], [825, 613]], [[603, 668], [636, 646], [629, 552], [632, 401]], [[605, 547], [591, 514], [533, 445], [473, 398], [451, 388]], [[653, 545], [668, 523], [703, 494], [803, 433], [882, 422], [931, 423]], [[572, 384], [598, 348], [545, 205], [743, 93], [790, 58], [838, -1]], [[681, 336], [710, 308], [709, 277], [680, 198], [636, 127], [584, 83], [535, 57], [462, 38], [407, 33]], [[404, 279], [442, 271], [629, 303], [861, 326], [884, 326], [943, 311]]],"bounds":{"minX": 69, "maxX": 943, "minY": -1, "maxY": 784}},"窄":{"medians":[[[456, 850], [533, 812], [564, 775]], [[236, 715], [245, 680], [191, 577], [183, 526]], [[273, 659], [509, 703], [671, 727], [754, 733], [792, 718], [811, 693], [742, 605]], [[375, 629], [386, 591], [364, 563], [301, 513], [252, 487]], [[577, 626], [657, 580], [678, 562], [694, 536]], [[363, 510], [384, 467], [338, 389], [282, 325], [180, 253]], [[372, 392], [397, 402], [569, 424], [705, 451], [749, 451], [776, 441]], [[473, 390], [505, 358], [492, 32], [502, -62]], [[535, 268], [548, 280], [628, 296], [689, 304], [726, 296]], [[534, 152], [566, 165], [686, 180], [726, 180], [744, 173]]],"bounds":{"minX": 180, "maxX": 811, "minY": -62, "maxY": 850}},"粗":{"medians":[[[179, 619], [227, 556], [240, 510]], [[441, 651], [460, 623], [388, 538]], [[76, 388], [107, 381], [139, 382], [409, 449], [473, 457], [492, 453]], [[297, 824], [312, 814], [348, 769], [334, 275], [314, 58], [315, -26]], [[310, 400], [291, 357], [203, 237], [118, 147], [70, 109]], [[360, 341], [371, 335], [375, 323], [424, 293], [446, 261]], [[542, 651], [571, 621], [581, 567], [581, 152], [565, 132]], [[604, 636], [619, 626], [754, 665], [776, 657], [799, 626], [789, 548], [775, 178], [750, 161]], [[613, 451], [625, 467], [639, 472], [689, 482], [723, 477]], [[612, 297], [625, 313], [653, 320], [697, 323], [723, 317]], [[414, 100], [434, 93], [469, 92], [568, 107], [862, 134], [905, 131], [951, 116]]],"bounds":{"minX": 70, "maxX": 951, "minY": -26, "maxY": 824}},"细":{"medians":[[[282, 781], [302, 756], [307, 729], [241, 605], [179, 505], [172, 479], [252, 475], [301, 485], [309, 493]], [[381, 624], [398, 584], [319, 465], [237, 360], [221, 333], [217, 310], [247, 310], [402, 357]], [[127, 130], [184, 121], [432, 253]], [[445, 532], [472, 510], [493, 469], [510, 339], [515, 244], [536, 145]], [[499, 526], [527, 511], [544, 513], [827, 565], [857, 556], [877, 536], [882, 529], [861, 280], [850, 210], [829, 169], [830, 114]], [[565, 344], [716, 377], [746, 379], [771, 373]], [[640, 508], [667, 487], [666, 241], [662, 228], [650, 218]], [[553, 168], [563, 179], [585, 185], [800, 212]]],"bounds":{"minX": 127, "maxX": 882, "minY": 114, "maxY": 781}},"薄":{"medians":[[[211, 715], [250, 708], [309, 712], [718, 760], [761, 758], [808, 743]], [[360, 803], [400, 780], [435, 639]], [[613, 838], [638, 806], [623, 747], [595, 677], [596, 666]], [[244, 617], [325, 572], [344, 543]], [[177, 471], [233, 434], [259, 400]], [[202, 14], [190, 44], [189, 93], [320, 336]], [[449, 573], [509, 569], [618, 587], [676, 605], [734, 606]], [[383, 497], [412, 463], [437, 279]], [[440, 485], [452, 479], [696, 525], [746, 519], [772, 490], [730, 329]], [[505, 416], [545, 417], [625, 437], [672, 434]], [[497, 340], [540, 343], [626, 362], [664, 358]], [[558, 663], [586, 633], [575, 262]], [[727, 690], [771, 670], [802, 644]], [[337, 207], [396, 201], [541, 223], [827, 248], [903, 229]], [[660, 316], [704, 269], [698, 203], [700, 78], [692, 22], [677, -5], [653, 0], [570, 42]], [[480, 170], [543, 124], [555, 94]]],"bounds":{"minX": 177, "maxX": 903, "minY": -5, "maxY": 838}},"融":{"medians":[[[197, 704], [220, 698], [269, 700], [429, 743], [489, 746]], [[193, 599], [223, 569], [248, 454]], [[240, 599], [252, 592], [379, 625], [409, 619], [426, 598], [407, 537], [389, 523]], [[264, 468], [274, 478], [373, 499], [435, 495]], [[113, 387], [142, 364], [152, 288], [151, 215], [134, 46]], [[176, 353], [185, 367], [221, 380], [388, 416], [445, 423], [467, 415], [481, 402], [476, 318], [483, 162], [475, 88], [466, 74], [437, 76], [385, 95]], [[232, 338], [263, 302], [274, 268]], [[358, 361], [374, 343], [336, 283]], [[204, 215], [265, 220], [376, 244], [419, 239]], [[319, 205], [303, 186], [301, 66]], [[540, 509], [566, 487], [577, 459], [608, 310]], [[594, 503], [608, 494], [744, 523], [806, 544], [840, 542], [871, 515], [844, 420], [823, 405]], [[628, 332], [642, 344], [771, 370], [836, 379], [874, 373]], [[665, 754], [714, 716], [717, 674], [709, 226], [692, 197]], [[535, 150], [586, 132], [782, 200], [832, 214], [839, 210]], [[829, 275], [910, 157], [924, 118], [925, 84]]],"bounds":{"minX": 113, "maxX": 925, "minY": 46, "maxY": 754}},"要":{"medians":[[[339, 773], [403, 764], [536, 782], [659, 807], [705, 803]], [[243, 616], [277, 591], [331, 423]], [[308, 612], [325, 602], [661, 654], [724, 648], [753, 613], [695, 464], [696, 440]], [[387, 718], [424, 680], [439, 484], [428, 476]], [[554, 762], [591, 730], [561, 503], [546, 490]], [[349, 450], [357, 443], [410, 448], [660, 481]], [[427, 431], [445, 415], [454, 392], [371, 198], [398, 179], [482, 150], [625, 77], [687, 38], [741, -19]], [[590, 377], [611, 340], [602, 280], [580, 221], [545, 158], [505, 114], [447, 75], [375, 49], [303, 35], [233, 33]], [[120, 286], [176, 275], [499, 316], [798, 339], [869, 333], [917, 316]]],"bounds":{"minX": 120, "maxX": 917, "minY": -19, "maxY": 807}},"轻":{"medians":[[[156, 610], [219, 608], [319, 631], [395, 656], [436, 654]], [[324, 823], [352, 770], [280, 576], [204, 409], [193, 368], [239, 367], [408, 410], [436, 404]], [[317, 499], [345, 462], [327, 84], [338, 6]], [[85, 197], [140, 180], [448, 305]], [[512, 661], [560, 659], [700, 691], [724, 690], [750, 679], [720, 619], [641, 524], [557, 449], [469, 396]], [[671, 513], [690, 515], [776, 469], [815, 439], [838, 404]], [[502, 334], [511, 329], [569, 327], [736, 357], [789, 354]], [[611, 309], [638, 282], [628, 127], [610, 116]], [[398, 72], [454, 63], [584, 82], [838, 104], [915, 83]]],"bounds":{"minX": 85, "maxX": 915, "minY": 6, "maxY": 823}},"还":{"medians":[[[415, 638], [472, 628], [772, 683], [840, 676]], [[599, 620], [628, 593], [608, 544], [556, 455], [471, 349], [410, 293], [363, 261]], [[559, 530], [596, 464], [597, 321], [588, 198], [594, 138]], [[690, 433], [752, 397], [814, 351], [845, 298]], [[229, 776], [305, 732], [339, 688]], [[109, 450], [147, 449], [251, 491], [267, 491], [291, 476], [294, 453], [288, 429], [260, 368], [265, 333], [295, 280], [306, 240], [295, 193], [279, 182]], [[101, 132], [145, 122], [240, 157], [321, 155], [587, 60], [677, 37], [757, 25], [810, 26], [892, 45], [922, 58]]],"bounds":{"minX": 101, "maxX": 922, "minY": 25, "maxY": 776}},"重":{"medians":[[[668, 760], [601, 776], [512, 731], [429, 701], [419, 703], [354, 682], [345, 685], [320, 674]], [[142, 553], [200, 545], [366, 575], [794, 623], [842, 619], [890, 605]], [[286, 475], [307, 458], [322, 428], [361, 235]], [[327, 479], [362, 464], [651, 501], [688, 496], [704, 487], [725, 458], [674, 278], [679, 256]], [[416, 367], [564, 390], [606, 384]], [[380, 254], [389, 261], [634, 294]], [[475, 692], [508, 675], [517, 621], [509, 71], [507, 57], [490, 40]], [[357, 145], [407, 136], [606, 163], [667, 154]], [[202, 3], [256, -7], [563, 23], [764, 33], [800, 30], [850, 12]]],"bounds":{"minX": 142, "maxX": 890, "minY": -7, "maxY": 776}},"钟":{"medians":[[[304, 816], [329, 792], [340, 769], [305, 700], [228, 575], [186, 519], [108, 425], [55, 378]], [[286, 612], [423, 657], [458, 659]], [[206, 479], [255, 478], [386, 522], [427, 525]], [[163, 321], [211, 319], [294, 339], [401, 375], [445, 380]], [[270, 458], [293, 446], [311, 417], [314, 282], [300, 170], [305, 141], [355, 155], [446, 213]], [[468, 567], [497, 542], [508, 515], [544, 328]], [[527, 561], [545, 550], [636, 570], [847, 597], [881, 560], [842, 441], [817, 431]], [[564, 375], [584, 364], [807, 396], [850, 394], [875, 386]], [[629, 797], [654, 791], [689, 757], [681, 597], [679, -15]]],"bounds":{"minX": 55, "maxX": 881, "minY": -15, "maxY": 816}},"锻":{"medians":[[[265, 805], [290, 782], [301, 757], [250, 644], [139, 469], [59, 379]], [[251, 595], [320, 621], [390, 632]], [[167, 468], [223, 473], [319, 503], [362, 507]], [[128, 339], [158, 336], [206, 342], [312, 375], [372, 381]], [[229, 449], [259, 426], [260, 308], [246, 183], [251, 157], [282, 166], [382, 241]], [[551, 757], [569, 724], [503, 641], [486, 622], [476, 620]], [[426, 624], [464, 583], [470, 500], [471, 260], [450, -3]], [[490, 469], [544, 495], [598, 498]], [[492, 338], [505, 351], [537, 363], [594, 366]], [[349, 153], [395, 149], [516, 214], [596, 265]], [[643, 700], [667, 676], [669, 588], [650, 500], [614, 439]], [[697, 669], [707, 681], [767, 707], [798, 706], [810, 694], [798, 640], [796, 558], [811, 516], [853, 503], [917, 516], [949, 510]], [[644, 387], [694, 393], [775, 424], [796, 416], [810, 399], [797, 332], [774, 265], [748, 217], [712, 172], [640, 128], [533, 98]], [[610, 319], [647, 299], [747, 181], [839, 103], [858, 95], [973, 80]]],"bounds":{"minX": 59, "maxX": 973, "minY": -3, "maxY": 805}},"长":{"medians":[[[630, 744], [650, 716], [653, 688], [594, 612], [543, 560], [479, 504], [453, 489]], [[141, 368], [207, 352], [427, 391], [793, 438], [823, 434], [888, 411]], [[336, 754], [374, 732], [389, 714], [395, 427], [379, 117], [387, 64], [404, 67], [436, 87], [545, 191]], [[456, 369], [491, 357], [630, 206], [727, 129], [770, 108], [952, 82]]],"bounds":{"minX": 141, "maxX": 952, "minY": 64, "maxY": 754}},"雪":{"medians":[[[359, 737], [395, 728], [449, 730], [630, 762], [685, 762]], [[225, 610], [233, 595], [234, 568], [213, 516], [179, 460], [172, 407]], [[265, 582], [284, 568], [679, 632], [760, 637], [792, 629], [808, 618], [821, 595], [738, 511]], [[477, 706], [510, 679], [508, 493], [497, 362], [501, 320]], [[323, 501], [379, 473], [396, 454]], [[308, 388], [353, 369], [379, 346]], [[586, 534], [653, 510], [675, 492]], [[578, 429], [649, 394], [661, 381]], [[317, 246], [373, 240], [633, 282], [672, 280], [712, 243], [667, 89], [641, 72]], [[288, 134], [335, 125], [538, 155], [566, 157], [606, 149]], [[296, 11], [327, 3], [624, 40], [684, 38], [708, 28]]],"bounds":{"minX": 172, "maxX": 821, "minY": 3, "maxY": 762}},"高":{"medians":[[[435, 851], [506, 813], [536, 782]], [[218, 672], [265, 664], [449, 695], [736, 725], [775, 720], [812, 707]], [[354, 598], [387, 563], [412, 446]], [[382, 603], [416, 597], [562, 630], [588, 628], [619, 601], [598, 542], [573, 523]], [[432, 464], [447, 476], [548, 495], [609, 500], [631, 492]], [[192, 360], [228, 325], [235, 276], [235, 190], [219, 81], [221, 22]], [[255, 352], [274, 341], [529, 382], [770, 403], [799, 397], [829, 370], [825, 157], [807, 55], [794, 31], [776, 15], [683, 49], [660, 63]], [[352, 270], [377, 250], [384, 235], [416, 103]], [[403, 271], [412, 262], [431, 261], [576, 292], [598, 289], [628, 259], [606, 198], [617, 181]], [[433, 128], [443, 140], [573, 158], [629, 148]]],"bounds":{"minX": 192, "maxX": 829, "minY": 15, "maxY": 851}}};
+var RADICAL_DATA={"一":{"radical":"一","radicalName":"一字旁","radicalNamePy":"yī zì páng","meaning":"one","desc":"horizontal stroke — numeral one"},"了":{"radical":"了","radicalName":"了","radicalNamePy":"le","meaning":"completion marker","desc":"Completed action or change of state"},"会":{"radical":"人","radicalName":"人字旁","radicalNamePy":"rén zì páng","meaning":"person","desc":"person radical — human-related"},"你":{"radical":"人","radicalName":"人字旁","radicalNamePy":"rén zì páng","meaning":"person","desc":"person radical — human-related"},"儿":{"radical":"儿","radicalName":"儿子旁","radicalNamePy":"ér zi páng","meaning":"legs","desc":"legs — person at bottom"},"光":{"radical":"儿","radicalName":"儿子旁","radicalNamePy":"ér zi páng","meaning":"legs","desc":"legs — person at bottom"},"克":{"radical":"十","radicalName":"十字头","radicalNamePy":"shí zì tóu","meaning":"ten","desc":"gram/overcome — ten radical on top"},"分":{"radical":"刀","radicalName":"立刀旁","radicalNamePy":"lì dāo páng","meaning":"knife","desc":"knife — cutting, blade-related"},"力":{"radical":"力","radicalName":"力字旁","radicalNamePy":"lì zì páng","meaning":"power","desc":"strength/power — effort-related"},"吃":{"radical":"口","radicalName":"口字旁","radicalNamePy":"kǒu zì páng","meaning":"mouth","desc":"mouth — speech/eating-related"},"巧":{"radical":"工","radicalName":"工字旁","radicalNamePy":"gōng zì páng","meaning":"work","desc":"work — labor/craft-related"},"年":{"radical":"干","radicalName":"干字旁","radicalNamePy":"gàn zì páng","meaning":"dry","desc":"dry/shield — intervention"},"快":{"radical":"心","radicalName":"心字底","radicalNamePy":"xīn zì dǐ","meaning":"heart","desc":"heart — emotions/feelings"},"我":{"radical":"戈","radicalName":"戈字旁","radicalNamePy":"gē zì páng","meaning":"halberd","desc":"halberd — weapon/war-related"},"是":{"radical":"日","radicalName":"日字旁","radicalNamePy":"rì zì páng","meaning":"sun","desc":"sun/day — time/light-related"},"没":{"radical":"水","radicalName":"三点水","radicalNamePy":"sān diǎn shuǐ","meaning":"water","desc":"water — liquid/flow-related"},"淋":{"radical":"水","radicalName":"三点水","radicalNamePy":"sān diǎn shuǐ","meaning":"water","desc":"water — liquid/flow-related"},"的":{"radical":"白","radicalName":"白字旁","radicalNamePy":"bái zì páng","meaning":"white","desc":"white — purity, brightness"},"短":{"radical":"矢","radicalName":"矢字旁","radicalNamePy":"shǐ zì páng","meaning":"arrow","desc":"arrow — projectile, direction"},"要":{"radical":"襾","radicalName":"西字头","radicalNamePy":"xī zì tóu","meaning":"cover","desc":"cover/west — covering from above"},"还":{"radical":"辶","radicalName":"走之底","radicalNamePy":"zǒu zhī dǐ","meaning":"walk","desc":"walk/road — movement, path-related"},"重":{"radical":"里","radicalName":"里字旁","radicalNamePy":"lǐ zì páng","meaning":"mile","desc":"mile/village — distance, community"},"钟":{"radical":"钅","radicalName":"金字旁","radicalNamePy":"jīn zì páng","meaning":"metal","desc":"metal/gold — metal/mineral-related"},"长":{"radical":"长","radicalName":"长字旁","radicalNamePy":"zhǎng zì páng","meaning":"long","desc":"long — length, growth, elder"},"高":{"radical":"高","radicalName":"高字旁","radicalNamePy":"gāo zì páng","meaning":"tall","desc":"tall/high — elevation, exalted"}};
+var pChars=[],CHAR_PINYIN={},curIdx=0,pmCtx=null,drawing=false,animCtx=null,animTimer=null,animStk=0,animPt=0,animSpeedMult=0.15,animLoop=false,strokeData=null;
+(function(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var btns=r.querySelectorAll('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');
+    if(!btns.length||!zh)return;
+    var word=zh.textContent.trim();
+    for(var i=0;i<word.length;i++){
+      var ch=word[i];
+      if(!/[\u4e00-\u9fff]/.test(ch))continue;
+      if(!seen[ch]){seen[ch]=true;pChars.push(ch);}
+    }
+    if(py){
+      var text=py.textContent.trim();
+      PINYIN_RE.lastIndex=0;var syls=[],m;
+      while((m=PINYIN_RE.exec(text))!==null)syls.push(m[0]);
+      if(!syls.length)syls=text.split(/\s+/);
+      var ci=0;
+      for(var j=0;j<word.length;j++){
+        var c=word[j];
+        if(/[\u4e00-\u9fff]/.test(c)){
+          if(ci<syls.length)CHAR_PINYIN[c]=syls[ci];
+          ci++;
+        }
+      }
+    }
+  });
+})();
+function initCanvas(){
+  var c=document.getElementById('pmCanvas');
+  var g=document.querySelector('.pm-grid');
+  c.width=g.offsetWidth;c.height=g.offsetHeight;
+  pmCtx=c.getContext('2d');pmCtx.strokeStyle='#c00';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';
+  c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingClientRect();pmCtx.moveTo(e.clientX-r.left,e.clientY-r.top)};
+  c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
+  c.onpointerup=c.onpointerleave=function(){drawing=false};
+  // Init animation canvas
+  var ac=document.getElementById('animCanvas');
+  ac.width=g.offsetWidth;ac.height=g.offsetHeight;
+  animCtx=ac.getContext('2d');animCtx.strokeStyle='#ccc';animCtx.lineWidth=5;animCtx.lineCap='round';animCtx.lineJoin='round';
+  // Speed slider
+  var slider=document.getElementById('animSpeed');
+  slider.oninput=function(){animSpeedMult=this.value/100;document.getElementById('speedLabel').textContent=animSpeedMult.toFixed(2)+'x'};
+}
+function openPractice(t){
+  var chars=t.split('').filter(function(c){return/[\u4e00-\u9fff]/.test(c)});
+  for(var i=0;i<pChars.length;i++){if(pChars[i]===chars[0]){curIdx=i;break}}
+  document.getElementById('pm')._wordChars=chars;
+  document.getElementById('pm').classList.add('open');
+  setTimeout(function(){initCanvas();showChar();renderNav()},100);
+}
+function closePractice(){animPause();document.getElementById('pm').classList.remove('open')}
+function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
+function showChar(){
+  var ch=pChars[curIdx];
+  document.getElementById('pmTitle').textContent=ch;
+  document.getElementById('pmPinyin').textContent=CHAR_PINYIN[ch]||'';
+  document.getElementById('pmHint').textContent='Trace the character in the grid';
+  var radInfo=typeof RADICAL_DATA!=='undefined'?RADICAL_DATA[ch]:null;
+  var radEl=document.getElementById('pmRadical');
+  if(radInfo){radEl.innerHTML='<span style="font-size:16px">'+radInfo.radical+'</span> '+radInfo.radicalName+' '+radInfo.radicalNamePy+' &mdash; '+radInfo.desc}
+  else{radEl.textContent=''}
+  loadStroke(ch);clearCanvas();clearAnimCanvas();
+  // Draw completed strokes as gray reference
+  if(strokeData)for(var s=0;s<strokeData.medians.length;s++)drawStroke(s,1);
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function playChar(){if(pChars[curIdx]&&typeof play!=='undefined')play(pChars[curIdx])}
+function loadChar(i){curIdx=i;showChar();renderNav()}
+function renderNav(){
+  var nav=document.getElementById('pmNav'),h='';
+  var wordChars=document.getElementById('pm')._wordChars||[];
+  for(var i=0;i<pChars.length;i++){var cls='pm-nav-btn';if(i===curIdx)cls+=' active';h+='<button class="'+cls+'" onclick="loadChar('+i+')" style="'+(wordChars.indexOf(pChars[i])>=0?'border-color:#E65100;font-weight:bold':'')+'">'+pChars[i]+'</button>'}
+  nav.innerHTML=h;
+}
+/* ---- Stroke Animation ---- */
+function loadStroke(ch){
+  animPause();
+  if(typeof STROKE_DATA==='undefined'||!STROKE_DATA[ch]){strokeData=null;return}
+  var sd=STROKE_DATA[ch];strokeData={medians:sd.medians,bounds:sd.bounds};
+  animStk=0;animPt=0;
+  clearAnimCanvas();
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function clearAnimCanvas(){if(animCtx){var c=document.getElementById('animCanvas');animCtx.clearRect(0,0,c.width,c.height)}}
+function animToggle(){
+  if(animTimer){animPause();return}
+  if(!strokeData||animStk>=strokeData.medians.length){animStk=0;animPt=0;clearAnimCanvas()}
+  if(animStk===0&&animPt===0){document.getElementById('animPlayBtn').textContent='\u23f8';animPlay()}
+}
+function animPlay(){
+  if(!strokeData||animStk>=strokeData.medians.length){if(animLoop){animStk=0;animPt=0;clearAnimCanvas();document.getElementById('animPlayBtn').textContent='\u23f8'}else{animPause();return}}
+  var med=strokeData.medians[animStk];
+  animTimer=setTimeout(function(){
+    animPt++;
+    animDrawCurrentState();
+    if(animPt<med.length){animPlay()}
+    else{animStk++;animPt=0;if(animStk<strokeData.medians.length){clearAnimCanvas();for(var s=0;s<animStk;s++)drawStroke(s,1)}animPlay()}
+  },40/animSpeedMult);
+}
+function animDrawCurrentState(){
+  if(!strokeData||animStk>=strokeData.medians.length)return;
+  var med=strokeData.medians[animStk];
+  if(!med||animPt<=0)return;
+  // Draw completed strokes
+  for(var s=0;s<animStk;s++)drawStroke(s,1);
+  // Draw current stroke partial
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<animPt;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function drawStroke(s,full){
+  if(!strokeData)return;
+  var med=strokeData.medians[s];if(!med)return;
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<med.length;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function animPause(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null}
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function printSheet(){
+  var s=document.getElementById('printSheet'),h='<h2 style="text-align:center;margin-bottom:12px;font-size:16px">Writing Practice Sheet</h2>';
+  for(var i=0;i<pChars.length;i++){h+='<div style="position:relative;width:110px;height:110px;display:inline-block;margin:6px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px">';h+='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:60px;color:rgba(200,60,60,.12);font-family:KaiTi,STKaiti,serif">'+pChars[i]+'</div>';h+='<div style="position:absolute;bottom:3px;width:100%;text-align:center;font-size:9px;color:#999">'+pChars[i]+'</div></div>'}
+  s.innerHTML=h;window.print();
+}
+
+
+/* ---- Flashcard ---- */
+var fcData=[],fcOrder=[],fcIdx=0;
+function initFlashcardData(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var b=r.querySelector('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');var en=r.querySelector('.en');
+    if(!b||!zh)return;
+    var text=zh.textContent.trim().replace(/^\w+:?\s*/,'');
+    fcData.push({zh:text,py:py?py.textContent.trim():'',en:en?en.textContent.trim():''});
+  });
+}
+function shuffleCards(){for(var i=fcOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=fcOrder[i];fcOrder[i]=fcOrder[j];fcOrder[j]=t;}fcIdx=0;showCard();}
+function openFlashcard(){
+  if(!fcOrder.length){fcOrder=[];for(var i=0;i<fcData.length;i++)fcOrder.push(i);}
+  shuffleCards();document.getElementById('fcOverlay').classList.add('show');
+}
+function closeFlashcard(){document.getElementById('fcOverlay').classList.remove('show');}
+function showCard(){
+  if(!fcOrder.length)return;
+  var d=fcData[fcOrder[fcIdx]];
+  document.getElementById('fcZh').textContent=d.zh;
+  document.getElementById('fcPy').textContent=d.py;
+  document.getElementById('fcEn').textContent=d.en;
+  document.getElementById('fcCard').classList.remove('flipped');
+  document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcOrder.length;
+}
+function flipCard(){document.getElementById('fcCard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcOrder.length;showCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcOrder.length)%fcOrder.length;showCard();}
+function playCard(){
+  var d=fcData[fcOrder[fcIdx]];
+  if(typeof play==='function')play(d.zh);
+}
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('fcOverlay').classList.contains('show'))return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard();}
+  else if(e.key==='ArrowRight')nextCard();
+  else if(e.key==='ArrowLeft')prevCard();
+  else if(e.key==='r')shuffleCards();
+  else if(e.key==='Esc')closeFlashcard();
+});
+initFlashcardData();
+</script>
+</body>
+</html>
