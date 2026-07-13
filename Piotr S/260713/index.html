@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piotr S - 260713</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
+  .date{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+
+  .row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:8px}
+  .row.gram{border-bottom:1px solid #d0e1fd}
+  .zh{font-size:17px;font-weight:bold;flex:1;min-width:0;overflow:hidden;color:#333}
+  .py{font-size:13px;color:#999;flex:1;min-width:0;overflow:hidden;font-style:italic}
+  .en{font-size:13px;color:#555;flex:1;min-width:0;overflow:hidden;word-break:break-word}
+
+  .play{width:32px;height:32px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{background:#1A56DB;color:#fff}
+  .play-placeholder{width:32px;flex-shrink:0}
+
+  .play-all{display:block;margin:0 auto 16px;padding:9px 24px;border:none;border-radius:8px;background:#1A56DB;color:#fff;font-size:14px;cursor:pointer}
+  .play-all:hover{background:#1548b8}
+  .sec{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
+  .back{display:inline-block;color:#1A56DB;text-decoration:none;font-size:13px;margin-bottom:10px}.back:hover{text-decoration:underline}
+  .lesson-label{text-align:center;color:#1A56DB;font-size:13px;font-weight:bold;padding:10px 0 6px;margin-top:8px;border-top:2px solid #1A56DB}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:16px}
+  .practice{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px} .practice:hover{background:#1A56DB;color:#fff}
+  .pm-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center} .pm-overlay.show{display:flex} .pm-box{background:#fff;border-radius:14px;padding:20px 24px;max-width:420px;width:90%;position:relative} .pm-nav{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap} .pm-nav-btn{border:1px solid #ccc;background:#fff;padding:4px 10px;border-radius:6px;font-size:14px;cursor:pointer;color:#333} .pm-nav-btn.active{background:#1A56DB;color:#fff;border-color:#1A56DB} .pm-grid{position:relative;margin:10px auto;width:240px;height:240px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden} .pm-ref{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:KaiTi,STKaiti,serif;font-size:160px;color:rgba(0,0,0,.1);z-index:1;pointer-events:none;user-select:none} .pm-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;cursor:crosshair} .pm-info{text-align:center;margin:8px 0;font-size:12px;color:#666} .pm-radical{color:#2E7D32;font-size:12px;margin:4px 0} .pm-rule{color:#888;font-size:11px;margin:2px 0} .pm-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#999} .pm-actions{display:flex;gap:8px;justify-content:center;margin-top:10px} .pm-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333} .pm-actions button:hover{background:#E8F0FE;color:#1A56DB}
+  .fc-btn{display:inline-block;margin:0 8px;padding:9px 24px;border:none;border-radius:8px;background:#E67E22;color:#fff;font-size:14px;cursor:pointer;vertical-align:middle} .fc-btn:hover{background:#D35400} .fc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:999;justify-content:center;align-items:center} .fc-overlay.show{display:flex} .fc-box{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center} .fc-card-wrap{perspective:800px;margin:16px 0} .fc-card{width:200px;height:260px;margin:0 auto;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer} .fc-card.flipped{transform:rotateY(180deg)} .fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px} .fc-front{background:#E8F0FE;color:#1A56DB} .fc-front .fc-zh{font-size:52px;margin-bottom:12px} .fc-front .fc-hint{font-size:12px;color:#999} .fc-back{background:#F0F8E8;transform:rotateY(180deg)} .fc-back .fc-py{font-size:22px;color:#1A56DB;margin-bottom:8px} .fc-back .fc-en{font-size:16px;color:#555} .fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px} .fc-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333} .fc-actions button:hover{background:#E8F0FE;color:#1A56DB} .fc-primary{background:#E67E22!important;color:#fff!important;border-color:#E67E22!important} .fc-primary:hover{background:#D35400!important;color:#fff!important} .fc-counter{font-size:12px;color:#999;margin-top:8px}
+
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../">&larr; Back</a>
+<h1>Piotr S - Class Notes</h1>
+<p class="date">260713 &nbsp;|&nbsp; 🔊 Click ▶ to hear pronunciation</p>
+<button class="play-all" onclick="playAll()">▶ Play All Vocabulary &amp; Sentences</button>
+<button class="fc-btn" onclick="openFlashcard()">🃏 Flashcards</button>
+
+        <div class="sec">&#128214; Vocabulary</div>
+
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(0)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">个</span>
+          <span class="py">gè</span>
+          <span class="en">(general measure word)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(1)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">杯</span>
+          <span class="py">bēi</span>
+          <span class="en">cup; glass (measure word)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(2)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">瓶</span>
+          <span class="py">píng</span>
+          <span class="en">bottle (measure word)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(3)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">碗</span>
+          <span class="py">wǎn</span>
+          <span class="en">bowl (measure word)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(4)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">水</span>
+          <span class="py">shuǐ</span>
+          <span class="en">water</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(5)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">茶</span>
+          <span class="py">chá</span>
+          <span class="en">tea</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(6)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">客</span>
+          <span class="py">kè</span>
+          <span class="en">guest; customer</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(7)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">位</span>
+          <span class="py">wèi</span>
+          <span class="en">(polite measure word for people)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(8)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">几</span>
+          <span class="py">jǐ</span>
+          <span class="en">how many (for small numbers, usually &lt;10)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(9)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">扫</span>
+          <span class="py">sǎo</span>
+          <span class="en">to scan</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(10)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">码</span>
+          <span class="py">mǎ</span>
+          <span class="en">code (QR code)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(11)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">点单</span>
+          <span class="py">diǎn dān</span>
+          <span class="en">to order (food)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(12)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">买单</span>
+          <span class="py">mǎi dān</span>
+          <span class="en">to pay the bill</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(13)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">分</span>
+          <span class="py">fēn</span>
+          <span class="en">to divide; to split</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(14)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">付</span>
+          <span class="py">fù</span>
+          <span class="en">to pay</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(15)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">可以</span>
+          <span class="py">kě yǐ</span>
+          <span class="en">can; okay; may</span>
+        </div>
+        <div class="sec">&#128218; Grammar</div>
+
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">量词：个 / 杯 / 瓶 / 碗</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">measure words</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(16)">▶</button>
+          
+          <span class="zh">一个人</span>
+          <span class="py">yī ge rén</span>
+          <span class="en">one person</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(17)">▶</button>
+          
+          <span class="zh">一杯水</span>
+          <span class="py">yī bēi shuǐ</span>
+          <span class="en">a glass of water</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(18)">▶</button>
+          
+          <span class="zh">一杯咖啡</span>
+          <span class="py">yī bēi kā fēi</span>
+          <span class="en">a cup of coffee</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(19)">▶</button>
+          
+          <span class="zh">两杯咖啡</span>
+          <span class="py">liǎng bēi kā fēi</span>
+          <span class="en">two cups of coffee</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(20)">▶</button>
+          
+          <span class="zh">两杯茶</span>
+          <span class="py">liǎng bēi chá</span>
+          <span class="en">two cups of tea</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(21)">▶</button>
+          
+          <span class="zh">两瓶水</span>
+          <span class="py">liǎng píng shuǐ</span>
+          <span class="en">two bottles of water</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(22)">▶</button>
+          
+          <span class="zh">两碗饭</span>
+          <span class="py">liǎng wǎn fàn</span>
+          <span class="en">two bowls of rice</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">几 vs 多少</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">how many (几 for &lt;10, 多少 for any)</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(23)">▶</button>
+          
+          <span class="zh">你们要几碗饭？</span>
+          <span class="py">nǐ men yào jǐ wǎn fàn</span>
+          <span class="en">How many bowls of rice do you want?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(24)">▶</button>
+          
+          <span class="zh">我们要两碗饭。</span>
+          <span class="py">wǒ men yào liǎng wǎn fàn</span>
+          <span class="en">We want two bowls of rice.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(25)">▶</button>
+          
+          <span class="zh">你们要几杯咖啡？</span>
+          <span class="py">nǐ men yào jǐ bēi kā fēi</span>
+          <span class="en">How many cups of coffee do you want?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(26)">▶</button>
+          
+          <span class="zh">我们要两杯咖啡。</span>
+          <span class="py">wǒ men yào liǎng bēi kā fēi</span>
+          <span class="en">We want two cups of coffee.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(27)">▶</button>
+          
+          <span class="zh">两位客人</span>
+          <span class="py">liǎng wèi kè rén</span>
+          <span class="en">two guests</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(28)">▶</button>
+          
+          <span class="zh">您几位？</span>
+          <span class="py">nín jǐ wèi</span>
+          <span class="en">How many people (in your party)?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(29)">▶</button>
+          
+          <span class="zh">两位。</span>
+          <span class="py">liǎng wèi</span>
+          <span class="en">Two.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">可以 / 不可以</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">can / cannot</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(30)">▶</button>
+          
+          <span class="zh">可以分两次付吗？</span>
+          <span class="py">kě yǐ fēn liǎng cì fù ma</span>
+          <span class="en">Can we split the payment into two times?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(31)">▶</button>
+          
+          <span class="zh">可以。</span>
+          <span class="py">kě yǐ</span>
+          <span class="en">Yes (you can).</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(32)">▶</button>
+          
+          <span class="zh">不可以。</span>
+          <span class="py">bù kě yǐ</span>
+          <span class="en">No (you can&#x27;t).</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(33)">▶</button>
+          
+          <span class="zh">坐这儿可以吗？</span>
+          <span class="py">zuò zhèr kě yǐ ma</span>
+          <span class="en">Is it okay to sit here?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(34)">▶</button>
+          
+          <span class="zh">可以。</span>
+          <span class="py">kě yǐ</span>
+          <span class="en">Yes, it&#x27;s fine.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(35)">▶</button>
+          
+          <span class="zh">不可以，我想坐那儿。</span>
+          <span class="py">bù kě yǐ, wǒ xiǎng zuò nàr</span>
+          <span class="en">No, I want to sit there.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">点单 / 买单</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">ordering and paying</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(36)">▶</button>
+          
+          <span class="zh">扫码点单。</span>
+          <span class="py">sǎo mǎ diǎn dān</span>
+          <span class="en">Scan the code to order.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(37)">▶</button>
+          
+          <span class="zh">你好，买单！</span>
+          <span class="py">nǐ hǎo, mǎi dān</span>
+          <span class="en">Hello, the bill please!</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(38)">▶</button>
+          
+          <span class="zh">你扫我还是我扫你？</span>
+          <span class="py">nǐ sǎo wǒ hái shì wǒ sǎo nǐ</span>
+          <span class="en">Do you scan me or do I scan you?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(39)">▶</button>
+          
+          <span class="zh">我扫你。</span>
+          <span class="py">wǒ sǎo nǐ</span>
+          <span class="en">I scan you.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">🍽️ 餐厅对话</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">restaurant dialogue</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(40)">▶</button>
+          
+          <span class="zh">服务员：您几位？</span>
+          <span class="py"></span>
+          <span class="en">Waiter: How many people?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(41)">▶</button>
+          
+          <span class="zh">客人：两位。</span>
+          <span class="py"></span>
+          <span class="en">Guest: Two.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(42)">▶</button>
+          
+          <span class="zh">服务员：这边请。坐这儿可以吗？</span>
+          <span class="py"></span>
+          <span class="en">Waiter: This way please. Is it okay to sit here?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(43)">▶</button>
+          
+          <span class="zh">客人：可以。/ 不可以，我想坐那儿。</span>
+          <span class="py"></span>
+          <span class="en">Guest: Yes. / No, I want to sit there.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(44)">▶</button>
+          
+          <span class="zh">服务员：这是菜单，请点单。</span>
+          <span class="py"></span>
+          <span class="en">Waiter: Here&#x27;s the menu, please order.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(45)">▶</button>
+          
+          <span class="zh">客人：扫码点单。</span>
+          <span class="py"></span>
+          <span class="en">Guest: (We&#x27;ll) scan the code to order.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(46)">▶</button>
+          
+          <span class="zh">服务员：您想吃什么？</span>
+          <span class="py"></span>
+          <span class="en">Waiter: What would you like to eat?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(47)">▶</button>
+          
+          <span class="zh">客人：我想吃这个。</span>
+          <span class="py"></span>
+          <span class="en">Guest: I&#x27;d like to eat this.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(48)">▶</button>
+          
+          <span class="zh">服务员：您想喝什么？</span>
+          <span class="py"></span>
+          <span class="en">Waiter: What would you like to drink?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(49)">▶</button>
+          
+          <span class="zh">客人：我想喝茶。</span>
+          <span class="py"></span>
+          <span class="en">Guest: I&#x27;d like to drink tea.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(50)">▶</button>
+          
+          <span class="zh">服务员：我们没有咖啡，我们有茶。您喝茶吗？</span>
+          <span class="py"></span>
+          <span class="en">Waiter: We don&#x27;t have coffee, we have tea. Do you drink tea?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(51)">▶</button>
+          
+          <span class="zh">客人：可以。</span>
+          <span class="py"></span>
+          <span class="en">Guest: Okay.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(52)">▶</button>
+          
+          <span class="zh">客人：你好，买单！</span>
+          <span class="py"></span>
+          <span class="en">Guest: Hello, the bill please!</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(53)">▶</button>
+          
+          <span class="zh">客人：你扫我还是我扫你？</span>
+          <span class="py"></span>
+          <span class="en">Guest: Do you scan me or do I scan you?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(54)">▶</button>
+          
+          <span class="zh">服务员：我扫你。</span>
+          <span class="py"></span>
+          <span class="en">Waiter: I scan you.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(55)">▶</button>
+          
+          <span class="zh">客人：可以分两次付吗？</span>
+          <span class="py"></span>
+          <span class="en">Guest: Can we split the payment into two times?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(56)">▶</button>
+          
+          <span class="zh">服务员：可以。</span>
+          <span class="py"></span>
+          <span class="en">Waiter: Yes.</span>
+        </div>
+<p class="footer" id="footerMsg">Detecting voice...</p>
+</div>
+<div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-box"><button class="pm-close" onclick="closePractice()">&times;</button><h3 style="text-align:center;margin-bottom:2px;color:#1A56DB"><span id="pmWord"></span></h3><p style="text-align:center;font-size:13px;color:#888;margin-bottom:4px" id="pmPinyin"></p><div class="pm-nav" id="pmNav"></div><div class="pm-grid"><div class="pm-ref" id="pmRef"></div><canvas class="pm-canvas" id="pmCanvas" width="240" height="240"></canvas></div><div class="pm-info"><div class="pm-radical" id="pmRadical"></div><div class="pm-rule">Write order: top→bottom, left→right, outside→inside</div></div><div class="pm-actions"><button onclick="playChar()">▶ Audio</button><button onclick="clearCanvas()">✗ Clear</button><button onclick="printSheet()">📝 Print</button></div></div></div><div class="fc-overlay" id="fcOverlay" onclick="if(event.target===this)closeFlashcard()"><div class="fc-box"><h3 style="color:#1A56DB;margin-bottom:4px">🃏 Flashcards</h3><div class="fc-card-wrap"><div class="fc-card" id="fcCard" onclick="flipCard()"><div class="fc-front"><div class="fc-zh" id="fcZh"></div><div class="fc-hint">Click to flip</div></div><div class="fc-back"><div class="fc-py" id="fcPy"></div><div class="fc-en" id="fcEn"></div></div></div></div><div class="fc-actions"><button onclick="flipCard()">Space</button><button onclick="prevCard()">←</button><button onclick="nextCard()">→</button><button onclick="shuffleCards()">🔀</button><button class="fc-primary" onclick="playCard()">▶</button><button onclick="closeFlashcard()">✕</button></div><div class="fc-counter" id="fcCounter"></div></div></div>
+<audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+const texts = ['个','杯','瓶','碗','水','茶','客','位','几','扫','码','点单','买单','分','付','可以','一个人','一杯水','一杯咖啡','两杯咖啡','两杯茶','两瓶水','两碗饭','你们要几碗饭？','我们要两碗饭。','你们要几杯咖啡？','我们要两杯咖啡。','两位客人','您几位？','两位。','可以分两次付吗？','可以。','不可以。','坐这儿可以吗？','可以。','不可以，我想坐那儿。','扫码点单。','你好，买单！','你扫我还是我扫你？','我扫你。','服务员：您几位？','客人：两位。','服务员：这边请。坐这儿可以吗？','客人：可以。/ 不可以，我想坐那儿。','服务员：这是菜单，请点单。','客人：扫码点单。','服务员：您想吃什么？','客人：我想吃这个。','服务员：您想喝什么？','客人：我想喝茶。','服务员：我们没有咖啡，我们有茶。您喝茶吗？','客人：可以。','客人：你好，买单！','客人：你扫我还是我扫你？','服务员：我扫你。','客人：可以分两次付吗？','服务员：可以。'];
+document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
+
+// Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
+var hz = false;
+function cv() {
+  var v = window.speechSynthesis.getVoices();
+  hz = v.some(function(x) { return x.lang.startsWith('zh'); });
+}
+cv();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = cv;
+}
+
+function play(i) {
+  var text = typeof i === "number" ? texts[i] : i;
+  try {
+    // ① Try Edge TTS local server first (1s timeout, cached after first play)
+    var ctrl = new AbortController();
+    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
+    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
+      .then(function(resp) {
+        clearTimeout(t1);
+        if (!resp.ok) throw new Error('tts');
+        return resp.blob();
+      })
+      .then(function(blob) {
+        var p = document.getElementById('player');
+        p.src = URL.createObjectURL(blob);
+        p.play();
+      })
+      .catch(function() {
+        clearTimeout(t1);
+        speechOrGoogle(text);
+      });
+  } catch(e) {
+    // AbortController not supported → skip Edge TTS
+    speechOrGoogle(text);
+  }
+}
+
+function speechOrGoogle(text) {
+  // ② Web Speech API → ③ Google Translate TTS
+  if (hz) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.9;
+    var voices = speechSynthesis.getVoices();
+    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
+    if (zhVoice) u.voice = zhVoice;
+    var fb = setTimeout(function() {
+      try { speechSynthesis.cancel(); } catch(e) {}
+      googleTTS(text);
+    }, 2500);
+    u.onstart = function() { clearTimeout(fb); };
+    u.onerror = function() {
+      clearTimeout(fb);
+      googleTTS(text);
+    };
+    try { speechSynthesis.cancel(); } catch(e) {}
+    try { speechSynthesis.speak(u); } catch(e) {
+      googleTTS(text);
+    }
+  } else {
+    googleTTS(text);
+  }
+}
+
+function googleTTS(text) {
+  var p = document.getElementById('player');
+  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  p.play();
+}
+
+function playAll() {
+  let i = 0;
+  function n() {
+    if (i >= texts.length) return;
+    play(i);
+    i++;
+    setTimeout(n, 1300);
+  }
+  n();
+}
+
+// ---- Practice + Flashcard ----
+var pChars=[],CHAR_PINYIN={};
+(function(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var btns=r.querySelectorAll('.practice');var zh=r.querySelector('.zh');var py=r.querySelector('.py');
+    if(!btns.length||!zh)return;
+    var word=zh.textContent.trim();
+    for(var i=0;i<word.length;i++){var ch=word[i];if(!/[\u4e00-\u9fff]/.test(ch))continue;if(!seen[ch]){seen[ch]=true;pChars.push(ch);}}
+    if(py){var text=py.textContent.trim();var syls=text.split(/\s+/);var ci=0;for(var j=0;j<word.length;j++){var c=word[j];if(/[\u4e00-\u9fff]/.test(c)){if(ci<syls.length)CHAR_PINYIN[c]=syls[ci];ci++;}}}
+  });
+})();
+var STROKE_DATA={"个":{"medians":[[[478, 800], [498, 780], [507, 752], [477, 686], [415, 589], [320, 473], [269, 423], [198, 365], [116, 313]], [[522, 690], [521, 679], [623, 568], [726, 467], [780, 425], [822, 408], [976, 388]], [[479, 494], [490, 488], [511, 456], [500, 70], [515, -13]]],"bounds":{"minX": 116, "maxX": 976, "minY": -13, "maxY": 800}},"买":{"medians":[[[240, 682], [263, 674], [293, 674], [538, 718], [684, 734], [724, 718], [743, 691], [666, 596]], [[343, 597], [404, 553], [415, 536]], [[272, 493], [347, 448], [379, 405]], [[178, 298], [234, 288], [410, 317], [765, 355], [845, 335]], [[484, 637], [520, 616], [543, 582], [518, 353], [503, 287], [475, 216], [430, 151], [364, 96], [295, 59], [186, 23]], [[540, 276], [541, 262], [654, 169], [734, 90], [762, 47], [773, 9]]],"bounds":{"minX": 178, "maxX": 845, "minY": 9, "maxY": 734}},"付":{"medians":[[[328, 798], [347, 783], [370, 746], [327, 651], [277, 561], [195, 440], [98, 320], [55, 280]], [[290, 528], [296, 491], [308, 463], [308, 435], [299, 243], [282, 98], [288, 45]], [[393, 461], [453, 455], [605, 485], [854, 520], [904, 518], [954, 505]], [[673, 817], [698, 803], [734, 767], [726, 585], [734, 93], [725, 62], [709, 38], [574, 103]], [[467, 378], [528, 312], [546, 274]]],"bounds":{"minX": 55, "maxX": 954, "minY": 38, "maxY": 817}},"以":{"medians":[[[200, 602], [243, 569], [251, 554], [254, 397], [243, 278], [252, 253], [299, 273], [488, 462]], [[442, 689], [525, 625], [539, 601]], [[720, 737], [741, 721], [762, 691], [758, 659], [742, 552], [726, 489], [691, 389], [668, 342], [628, 277], [537, 186], [490, 152], [395, 104]], [[703, 324], [708, 307], [784, 248], [851, 181], [870, 152], [881, 114]]],"bounds":{"minX": 200, "maxX": 881, "minY": 104, "maxY": 737}},"位":{"medians":[[[296, 786], [315, 771], [334, 737], [291, 636], [201, 491], [129, 395], [64, 328]], [[244, 509], [249, 479], [268, 448], [267, 237], [256, 113], [262, 48]], [[538, 795], [632, 741], [660, 700]], [[427, 534], [464, 527], [520, 531], [762, 588], [827, 592]], [[455, 405], [500, 335], [524, 279]], [[701, 472], [731, 423], [643, 199], [613, 178]], [[336, 129], [388, 120], [543, 144], [857, 176], [893, 173], [943, 156]]],"bounds":{"minX": 64, "maxX": 943, "minY": 48, "maxY": 795}},"几":{"medians":[[[325, 703], [365, 668], [369, 652], [363, 470], [339, 324], [302, 225], [265, 163], [197, 89], [147, 49], [129, 42]], [[407, 661], [423, 678], [493, 695], [588, 729], [611, 723], [631, 703], [613, 634], [595, 513], [574, 244], [582, 163], [605, 119], [623, 103], [687, 74], [764, 67], [857, 78], [897, 94], [930, 117], [949, 277]]],"bounds":{"minX": 129, "maxX": 949, "minY": 42, "maxY": 729}},"分":{"medians":[[[333, 687], [347, 674], [362, 642], [306, 551], [231, 465], [158, 407], [100, 373]], [[454, 803], [495, 791], [527, 765], [659, 579], [707, 524], [757, 480], [783, 463], [819, 454], [978, 435]], [[251, 378], [303, 368], [607, 435], [626, 429], [646, 410], [634, 299], [609, 167], [591, 110], [565, 64], [541, 41], [523, 39], [420, 94]], [[398, 358], [424, 334], [391, 252], [355, 194], [319, 149], [261, 96], [200, 54], [156, 32]]],"bounds":{"minX": 100, "maxX": 978, "minY": 32, "maxY": 803}},"单":{"medians":[[[329, 769], [410, 708], [437, 665]], [[621, 827], [634, 818], [651, 789], [559, 668], [538, 645], [528, 644], [520, 630]], [[250, 590], [287, 562], [347, 339]], [[316, 585], [333, 576], [478, 608], [544, 616], [552, 622], [641, 633], [699, 628], [729, 589], [705, 531], [663, 391]], [[384, 471], [411, 472], [558, 506], [585, 509], [607, 503]], [[367, 361], [376, 369], [411, 376], [628, 406], [641, 417]], [[112, 210], [148, 201], [190, 202], [381, 233], [794, 273], [841, 270], [902, 252]], [[459, 584], [505, 558], [503, -61]]],"bounds":{"minX": 112, "maxX": 902, "minY": -61, "maxY": 827}},"可":{"medians":[[[126, 681], [187, 663], [480, 710], [845, 747], [930, 719]], [[250, 535], [271, 517], [283, 497], [316, 319]], [[302, 534], [323, 524], [451, 554], [480, 549], [503, 523], [476, 436], [447, 415]], [[335, 355], [348, 366], [438, 386], [490, 388], [515, 381]], [[627, 698], [670, 662], [670, 122], [653, 70], [636, 56], [571, 83], [520, 114]]],"bounds":{"minX": 126, "maxX": 930, "minY": 56, "maxY": 747}},"客":{"medians":[[[449, 867], [518, 817], [542, 773]], [[229, 722], [240, 688], [233, 663], [187, 581], [180, 527]], [[269, 663], [282, 673], [475, 707], [726, 737], [768, 720], [785, 695], [711, 607]], [[384, 629], [406, 590], [367, 523], [296, 443], [256, 410], [204, 380]], [[412, 535], [571, 562], [595, 561], [618, 549], [600, 511], [564, 465], [518, 410], [439, 333], [284, 207], [170, 135], [101, 103]], [[353, 469], [371, 471], [405, 455], [601, 303], [668, 259], [743, 221], [771, 211], [818, 208], [979, 216]], [[298, 187], [323, 177], [336, 155], [368, -32]], [[364, 188], [378, 176], [567, 209], [609, 201], [637, 172], [602, 81], [575, 61]], [[389, 27], [400, 15], [563, 33], [621, 33], [644, 23]]],"bounds":{"minX": 101, "maxX": 979, "minY": -32, "maxY": 867}},"扫":{"medians":[[[132, 544], [151, 539], [199, 542], [360, 584], [429, 590]], [[284, 790], [324, 759], [329, 745], [315, 412], [316, 113], [310, 83], [293, 52], [262, 61], [169, 107]], [[53, 222], [105, 219], [198, 288], [406, 425]], [[483, 509], [522, 503], [542, 506], [757, 553], [790, 542], [815, 514], [765, 224], [736, 196]], [[439, 323], [481, 316], [666, 349], [714, 344]], [[455, 135], [487, 128], [751, 163], [787, 162], [818, 151]]],"bounds":{"minX": 53, "maxX": 818, "minY": 52, "maxY": 790}},"杯":{"medians":[[[105, 510], [129, 504], [183, 509], [290, 533], [367, 559], [422, 557]], [[265, 832], [316, 778], [308, 356], [291, 105], [291, 23]], [[281, 502], [260, 425], [211, 342], [147, 254], [62, 162]], [[338, 437], [345, 427], [398, 398], [429, 358]], [[468, 612], [521, 608], [639, 636], [817, 667], [866, 667], [913, 656]], [[644, 612], [674, 587], [676, 572], [634, 471], [591, 397], [522, 299], [441, 207], [382, 160]], [[598, 478], [637, 417], [640, 388], [639, 210], [628, 65], [634, 0]], [[744, 345], [888, 249], [910, 223], [925, 189]]],"bounds":{"minX": 62, "maxX": 925, "minY": 0, "maxY": 832}},"水":{"medians":[[[473, 814], [500, 795], [521, 770], [508, 455], [507, 91], [485, 42], [442, 56], [371, 91], [369, 98], [358, 98]], [[147, 491], [209, 482], [354, 512], [381, 505], [392, 495], [384, 459], [353, 387], [280, 261], [187, 160], [113, 110]], [[737, 682], [750, 671], [766, 637], [721, 583], [591, 461], [590, 452]], [[539, 500], [550, 465], [618, 387], [729, 271], [782, 229], [820, 207], [990, 185]]],"bounds":{"minX": 113, "maxX": 990, "minY": 42, "maxY": 814}},"点":{"medians":[[[471, 807], [509, 778], [517, 765], [514, 533], [497, 509]], [[545, 626], [561, 637], [652, 657], [705, 662], [734, 655]], [[325, 487], [356, 462], [363, 444], [396, 268]], [[387, 482], [408, 470], [548, 490], [629, 509], [660, 506], [700, 474], [671, 381], [646, 365]], [[418, 290], [431, 304], [625, 331], [679, 329], [710, 319]], [[274, 214], [247, 139], [198, 65], [185, 33]], [[390, 194], [435, 118], [448, 78]], [[557, 215], [608, 131], [623, 90]], [[715, 234], [836, 121], [860, 82], [871, 43]]],"bounds":{"minX": 185, "maxX": 871, "minY": 33, "maxY": 807}},"瓶":{"medians":[[[172, 721], [233, 674], [258, 630]], [[431, 813], [451, 797], [460, 779], [342, 624]], [[143, 529], [189, 523], [388, 570], [432, 574], [460, 569]], [[73, 355], [108, 348], [140, 350], [351, 400], [426, 413], [466, 409]], [[195, 498], [233, 471], [229, 327], [214, 236], [188, 165], [145, 94], [104, 56], [71, 38]], [[349, 535], [372, 520], [378, 506], [376, 225], [369, 133], [381, 56]], [[509, 643], [531, 638], [590, 640], [762, 687], [797, 693], [822, 689]], [[538, 618], [569, 589], [575, 569], [560, 388], [518, 157], [524, 140], [548, 141], [650, 190]], [[591, 470], [604, 480], [697, 507], [726, 509], [747, 496], [720, 356], [715, 247], [731, 161], [757, 110], [783, 82], [814, 62], [866, 46], [898, 47], [930, 57], [939, 88], [953, 204]], [[583, 358], [589, 348], [642, 319], [653, 301]]],"bounds":{"minX": 71, "maxX": 953, "minY": 38, "maxY": 813}},"码":{"medians":[[[147, 632], [209, 629], [364, 676], [400, 680], [413, 675]], [[224, 607], [262, 579], [262, 572], [245, 508], [211, 420], [149, 307], [77, 215], [39, 185], [38, 178]], [[171, 412], [202, 370], [233, 175]], [[229, 394], [250, 408], [342, 433], [378, 408], [356, 309], [332, 291]], [[251, 224], [263, 242], [325, 260], [372, 267], [396, 262]], [[473, 711], [529, 708], [593, 729], [689, 750], [714, 748], [747, 721], [752, 714], [729, 625], [706, 463], [686, 414]], [[509, 642], [528, 628], [543, 601], [528, 400], [531, 366], [560, 364], [651, 384], [796, 403], [821, 395], [847, 367], [830, 296], [807, 137], [781, 57], [751, 28], [705, 45], [639, 82]], [[357, 191], [407, 183], [483, 204], [688, 243], [758, 228]]],"bounds":{"minX": 38, "maxX": 847, "minY": 28, "maxY": 750}},"碗":{"medians":[[[135, 632], [199, 630], [334, 673], [395, 677]], [[216, 607], [247, 580], [228, 515], [195, 436], [137, 338], [89, 277], [33, 221]], [[145, 421], [173, 382], [201, 185]], [[203, 399], [243, 420], [304, 437], [334, 422], [340, 414], [316, 316], [295, 305]], [[221, 241], [234, 257], [296, 274], [335, 277], [353, 272]], [[575, 815], [653, 772], [677, 737]], [[449, 656], [457, 629], [456, 602], [420, 525], [415, 493]], [[489, 600], [500, 609], [616, 636], [792, 667], [823, 657], [840, 639], [840, 630], [778, 559]], [[472, 502], [494, 476], [493, 462], [438, 368], [389, 313]], [[470, 379], [557, 395], [574, 377], [525, 257], [447, 143], [380, 74], [306, 24]], [[422, 320], [469, 278], [477, 263]], [[685, 428], [711, 425], [793, 448], [817, 443], [826, 429], [813, 320], [789, 264], [768, 249], [715, 280]], [[638, 439], [659, 415], [664, 393], [649, 242], [652, 142], [666, 94], [692, 67], [747, 45], [789, 39], [856, 42], [896, 54], [918, 67], [933, 86], [940, 200]]],"bounds":{"minX": 33, "maxX": 940, "minY": 24, "maxY": 815}},"茶":{"medians":[[[213, 662], [259, 656], [323, 660], [441, 681], [727, 715], [788, 711], [823, 697]], [[336, 778], [359, 768], [379, 748], [408, 597]], [[616, 833], [632, 823], [650, 791], [580, 603]], [[514, 577], [484, 571], [398, 460], [306, 374], [214, 304], [115, 249]], [[527, 555], [531, 542], [547, 526], [620, 463], [710, 395], [779, 355], [839, 341], [971, 331]], [[315, 283], [355, 275], [414, 278], [624, 320], [675, 318]], [[470, 435], [515, 389], [512, 61], [493, 23], [443, 42], [390, 73]], [[338, 173], [307, 112], [249, 33]], [[623, 195], [737, 105], [758, 75], [769, 39]]],"bounds":{"minX": 115, "maxX": 971, "minY": 23, "maxY": 833}}};
+var RADICAL_DATA={"个":{"radical":"个","radicalName":"个","radicalNamePy":"gè","meaning":"measure word","desc":"General measure word for objects/people"},"买":{"radical":"买","radicalName":"买","radicalNamePy":"mǎi","meaning":"buy","desc":"To buy, to purchase"},"以":{"radical":"人","radicalName":"人字旁","radicalNamePy":"rén zì páng","meaning":"person","desc":"person radical — human-related"},"位":{"radical":"人","radicalName":"人字旁","radicalNamePy":"rén zì páng","meaning":"person","desc":"person radical — human-related"},"几":{"radical":"几","radicalName":"几字旁","radicalNamePy":"jǐ zì páng","meaning":"table","desc":"small table — stool, support"},"分":{"radical":"刀","radicalName":"立刀旁","radicalNamePy":"lì dāo páng","meaning":"knife","desc":"knife — cutting, blade-related"},"单":{"radical":"十","radicalName":"十字旁","radicalNamePy":"shí zì páng","meaning":"ten","desc":"ten — completeness, many"},"可":{"radical":"口","radicalName":"口字旁","radicalNamePy":"kǒu zì páng","meaning":"mouth","desc":"mouth — speech/eating-related"},"客":{"radical":"宀","radicalName":"宝盖头","radicalNamePy":"bǎo gài tóu","meaning":"roof","desc":"roof — house/building-related"},"杯":{"radical":"木","radicalName":"木字旁","radicalNamePy":"mù zì páng","meaning":"wood","desc":"wood/tree — plant/material-related"},"水":{"radical":"水","radicalName":"三点水","radicalNamePy":"sān diǎn shuǐ","meaning":"water","desc":"water — liquid/flow-related"},"点":{"radical":"火","radicalName":"火字旁","radicalNamePy":"huǒ zì páng","meaning":"fire","desc":"fire — heat/burning-related"},"瓶":{"radical":"瓦","radicalName":"瓦字旁","radicalNamePy":"wǎ zì páng","meaning":"tile","desc":"tile/earthenware — pottery-related"},"茶":{"radical":"艹","radicalName":"草字头","radicalNamePy":"cǎo zì tóu","meaning":"grass","desc":"tea — grass radical on top"}};
+
+var curCharIdx=0,curWord='';
+function openPractice(word){curWord=word;curCharIdx=0;var nav=document.getElementById('pmNav'),h='';for(var j=0;j<word.length;j++){if(/[\u4e00-\u9fff]/.test(word[j]))h+='<button class="pm-nav-btn'+(curCharIdx===0?' active':'')+'" onclick="loadChar('+j+')">'+word[j]+'</button>';}nav.innerHTML=h;document.getElementById('pmWord').textContent='Word: '+word;initCanvas();document.getElementById('pm').classList.add('show');showChar();}
+function showChar(){var ch='',k=0;for(var j=0;j<curWord.length;j++){if(/[\u4e00-\u9fff]/.test(curWord[j])){if(k===curCharIdx){ch=curWord[j];break;}k++;}}if(!ch)return;document.getElementById('pmRef').textContent=ch;document.getElementById('pmPinyin').textContent=CHAR_PINYIN[ch]||'';var btns=document.querySelectorAll('#pmNav .pm-nav-btn');btns.forEach(function(b,i){b.classList.toggle('active',i===curCharIdx);});var radEl=document.getElementById('pmRadical');if(typeof RADICAL_DATA!=='undefined'&&RADICAL_DATA[ch]){var r=RADICAL_DATA[ch];radEl.innerHTML=r.radical+' '+r.radicalName+' '+r.radicalNamePy+' &mdash; "'+r.meaning+'" radical &mdash; '+r.desc;}else{radEl.textContent='';}clearCanvas();}
+function loadChar(i){curCharIdx=i;showChar();}
+function playChar(){var ch=document.getElementById('pmRef').textContent;if(ch&&typeof play==='function')play(ch);}
+var pmCanvas=null,pmCtx=null;
+function initCanvas(){pmCanvas=document.getElementById('pmCanvas');if(!pmCanvas||pmCanvas.__init)return;pmCanvas.__init=true;pmCtx=pmCanvas.getContext('2d');pmCtx.strokeStyle='#D32F2F';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';var drawing=false;pmCanvas.addEventListener('pointerdown',function(e){drawing=true;pmCtx.beginPath();pmCtx.moveTo(e.offsetX,e.offsetY);e.preventDefault();});pmCanvas.addEventListener('pointermove',function(e){if(!drawing)return;pmCtx.lineTo(e.offsetX,e.offsetY);pmCtx.stroke();});pmCanvas.addEventListener('pointerup',function(){drawing=false;});pmCanvas.addEventListener('pointerleave',function(){drawing=false;});}
+function clearCanvas(){if(pmCtx)pmCtx.clearRect(0,0,240,240);}
+function closePractice(){document.getElementById('pm').classList.remove('show');}
+function printSheet(){var w=window.open('','_blank');var h='<!DOCTYPE html><html><head><meta charset=UTF-8><title>Practice Sheet</title><style>body{font-family:KaiTi,serif;padding:20px}h2{text-align:center}.grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.cell{width:100px;height:100px;border:1px solid #ccc;position:relative;display:flex;align-items:center;justify-content:center;font-size:60px;color:rgba(0,0,0,.15)}.cell::before{content:"\00a0";position:absolute;inset:0;background:linear-gradient(transparent 49%,#eee 49%,#eee 51%,transparent 51%),linear-gradient(90deg,transparent 49%,#eee 49%,#eee 51%,transparent 51%)}</style></head><body><h2>Practice Sheet</h2><div class=grid>';for(var c=0;c<pChars.length;c++)h+='<div class=cell>'+pChars[c]+'</div>';h+='</div></body></html>';w.document.write(h);w.document.close();}
+
+// ---- Flashcard ----
+var fcData=[],fcOrder=[],fcIdx=0;
+function initFlashcardData(){var rows=document.querySelectorAll('.row');rows.forEach(function(r){var b=r.querySelector('.practice');var zh=r.querySelector('.zh');var py=r.querySelector('.py');var en=r.querySelector('.en');if(!b||!zh)return;fcData.push({zh:zh.textContent.trim().replace(/^\w+:?\s*/,''),py:py?py.textContent.trim():'',en:en?en.textContent.trim():''});});}
+function shuffleCards(){for(var i=fcOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=fcOrder[i];fcOrder[i]=fcOrder[j];fcOrder[j]=t;}fcIdx=0;showCard();}
+function openFlashcard(){if(!fcOrder.length){fcOrder=[];for(var i=0;i<fcData.length;i++)fcOrder.push(i);}shuffleCards();document.getElementById('fcOverlay').classList.add('show');}
+function closeFlashcard(){document.getElementById('fcOverlay').classList.remove('show');}
+function showCard(){if(!fcOrder.length)return;var d=fcData[fcOrder[fcIdx]];document.getElementById('fcZh').textContent=d.zh;document.getElementById('fcPy').textContent=d.py;document.getElementById('fcEn').textContent=d.en;document.getElementById('fcCard').classList.remove('flipped');document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcOrder.length;}
+function flipCard(){document.getElementById('fcCard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcOrder.length;showCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcOrder.length)%fcOrder.length;showCard();}
+function playCard(){var d=fcData[fcOrder[fcIdx]];if(typeof play==='function')play(d.zh);}
+document.addEventListener('keydown',function(e){if(!document.getElementById('fcOverlay').classList.contains('show'))return;if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard();}else if(e.key==='ArrowRight')nextCard();else if(e.key==='ArrowLeft')prevCard();else if(e.key==='r')shuffleCards();else if(e.key==='Escape')closeFlashcard();});
+initFlashcardData();
+
+
+/* ---- Stroke Animation ---- */
+function loadStroke(ch){
+  animPause();
+  if(typeof STROKE_DATA==='undefined'||!STROKE_DATA[ch]){strokeData=null;return}
+  var sd=STROKE_DATA[ch];strokeData={medians:sd.medians,bounds:sd.bounds};
+  animStk=0;animPt=0;
+  clearAnimCanvas();
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function clearAnimCanvas(){if(animCtx){var c=document.getElementById('animCanvas');animCtx.clearRect(0,0,c.width,c.height)}}
+function animToggle(){
+  if(animTimer){animPause();return}
+  if(!strokeData||animStk>=strokeData.medians.length){animStk=0;animPt=0;clearAnimCanvas()}
+  if(animStk===0&&animPt===0){document.getElementById('animPlayBtn').textContent='\u23f8';animPlay()}
+}
+function animPlay(){
+  if(!strokeData||animStk>=strokeData.medians.length){if(animLoop){animStk=0;animPt=0;clearAnimCanvas();document.getElementById('animPlayBtn').textContent='\u23f8'}else{animPause();return}}
+  var med=strokeData.medians[animStk];
+  animTimer=setTimeout(function(){
+    animPt++;
+    animDrawCurrentState();
+    if(animPt<med.length){animPlay()}
+    else{animStk++;animPt=0;if(animStk<strokeData.medians.length){clearAnimCanvas();for(var s=0;s<animStk;s++)drawStroke(s,1)}animPlay()}
+  },40/animSpeedMult);
+}
+function animDrawCurrentState(){
+  if(!strokeData||animStk>=strokeData.medians.length)return;
+  var med=strokeData.medians[animStk];
+  if(!med||animPt<=0)return;
+  for(var s=0;s<animStk;s++)drawStroke(s,1);
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<animPt;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function drawStroke(s,full){
+  if(!strokeData)return;
+  var med=strokeData.medians[s];if(!med)return;
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<med.length;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function animPause(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null}
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+
+</script>
+</body>
+</html>
