@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piotr S - 260728</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
+  .date{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+
+  .row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:8px}
+  .row.gram{border-bottom:1px solid #d0e1fd}
+  .zh{font-size:17px;font-weight:bold;flex:1;min-width:0;overflow:hidden;color:#333}
+  .py{font-size:13px;color:#999;flex:1;min-width:0;overflow:hidden;font-style:italic}
+  .en{font-size:13px;color:#555;flex:1;min-width:0;overflow:hidden;word-break:break-word}
+
+  .play{width:32px;height:32px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{background:#1A56DB;color:#fff}
+  .play-placeholder{width:32px;flex-shrink:0}
+
+  .play-all{display:block;margin:0 auto 16px;padding:9px 24px;border:none;border-radius:8px;background:#1A56DB;color:#fff;font-size:14px;cursor:pointer}
+  .play-all:hover{background:#1548b8}
+  .sec{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
+  .back{display:inline-block;color:#1A56DB;text-decoration:none;font-size:13px;margin-bottom:10px}.back:hover{text-decoration:underline}
+  .lesson-label{text-align:center;color:#1A56DB;font-size:13px;font-weight:bold;padding:10px 0 6px;margin-top:8px;border-top:2px solid #1A56DB}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:16px}
+  .practice{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px} .practice:hover{background:#1A56DB;color:#fff}
+  .pm-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;justify-content:center;align-items:center} .pm-overlay.show{display:flex} .pm-box{background:#fff;border-radius:14px;padding:20px 24px;max-width:420px;width:90%;position:relative} .pm-nav{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap} .pm-nav-btn{border:1px solid #ccc;background:#fff;padding:4px 10px;border-radius:6px;font-size:14px;cursor:pointer;color:#333} .pm-nav-btn.active{background:#1A56DB;color:#fff;border-color:#1A56DB} .pm-grid{position:relative;margin:10px auto;width:240px;height:240px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden} .pm-ref{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:KaiTi,STKaiti,serif;font-size:160px;color:rgba(0,0,0,.1);z-index:1;pointer-events:none;user-select:none} .pm-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:3;cursor:crosshair} .pm-info{text-align:center;margin:8px 0;font-size:12px;color:#666} .pm-radical{color:#2E7D32;font-size:12px;margin:4px 0} .pm-rule{color:#888;font-size:11px;margin:2px 0} .pm-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#999} .pm-actions{display:flex;gap:8px;justify-content:center;margin-top:10px} .pm-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333} .pm-actions button:hover{background:#E8F0FE;color:#1A56DB}
+  .fc-btn{display:inline-block;margin:0 8px;padding:9px 24px;border:none;border-radius:8px;background:#E67E22;color:#fff;font-size:14px;cursor:pointer;vertical-align:middle} .fc-btn:hover{background:#D35400} .fc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:999;justify-content:center;align-items:center} .fc-overlay.show{display:flex} .fc-box{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center} .fc-card-wrap{perspective:800px;margin:16px 0} .fc-card{width:200px;height:260px;margin:0 auto;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer} .fc-card.flipped{transform:rotateY(180deg)} .fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px} .fc-front{background:#E8F0FE;color:#1A56DB} .fc-front .fc-zh{font-size:52px;margin-bottom:12px} .fc-front .fc-hint{font-size:12px;color:#999} .fc-back{background:#F0F8E8;transform:rotateY(180deg)} .fc-back .fc-py{font-size:22px;color:#1A56DB;margin-bottom:8px} .fc-back .fc-en{font-size:16px;color:#555} .fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px} .fc-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333} .fc-actions button:hover{background:#E8F0FE;color:#1A56DB} .fc-primary{background:#E67E22!important;color:#fff!important;border-color:#E67E22!important} .fc-primary:hover{background:#D35400!important;color:#fff!important} .fc-counter{font-size:12px;color:#999;margin-top:8px}
+
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../">&larr; Back</a>
+<h1>Piotr S - Class Notes</h1>
+<p class="date">260728 &nbsp;|&nbsp; 🔊 Click ▶ to hear pronunciation</p>
+<button class="play-all" onclick="playAll()">▶ Play All Vocabulary &amp; Sentences</button>
+<button class="fc-btn" onclick="openFlashcard()">🃏 Flashcards</button>
+
+        <div class="sec">&#128214; Vocabulary</div>
+
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(0)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">订</span>
+          <span class="py">dìng</span>
+          <span class="en">to book (a room)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(1)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">房间</span>
+          <span class="py">fáng jiān</span>
+          <span class="en">room</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(2)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">护照</span>
+          <span class="py">hù zhào</span>
+          <span class="en">passport</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(3)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">房卡</span>
+          <span class="py">fáng kǎ</span>
+          <span class="en">room card</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(4)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">退房</span>
+          <span class="py">tuì fáng</span>
+          <span class="en">to check out</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(5)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">行李</span>
+          <span class="py">xíng li</span>
+          <span class="en">luggage; baggage</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(6)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">刷卡</span>
+          <span class="py">shuā kǎ</span>
+          <span class="en">to pay by card</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(7)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">账单</span>
+          <span class="py">zhàng dān</span>
+          <span class="en">bill</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(8)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">存</span>
+          <span class="py">cún</span>
+          <span class="en">to store; to deposit</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(9)">▶</button>
+          <button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)" title="Practice writing">✎</button>
+          <span class="zh">毛巾</span>
+          <span class="py">máo jīn</span>
+          <span class="en">towel</span>
+        </div>
+        <div class="sec">&#128218; Grammar</div>
+
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">🏨 入住退房对话</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">hotel check-in/out dialogue</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(10)">▶</button>
+          
+          <span class="zh">你好，我订了一个房间。</span>
+          <span class="py">nǐ hǎo, wǒ dìng le yī gè fáng jiān</span>
+          <span class="en">Hello, I booked a room.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(11)">▶</button>
+          
+          <span class="zh">您叫什么名字？</span>
+          <span class="py">nín jiào shén me míng zi</span>
+          <span class="en">What&#x27;s your name?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(12)">▶</button>
+          
+          <span class="zh">我叫……这是我的护照。</span>
+          <span class="py">wǒ jiào... zhè shì wǒ de hù zhào</span>
+          <span class="en">My name is... This is my passport.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(13)">▶</button>
+          
+          <span class="zh">您住几个晚上？</span>
+          <span class="py">nín zhù jǐ gè wǎn shàng</span>
+          <span class="en">How many nights will you stay?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(14)">▶</button>
+          
+          <span class="zh">我住三个晚上。</span>
+          <span class="py">wǒ zhù sān gè wǎn shàng</span>
+          <span class="en">I&#x27;ll stay three nights.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(15)">▶</button>
+          
+          <span class="zh">您的房间在5楼，510号。</span>
+          <span class="py">nín de fáng jiān zài wǔ lóu, wǔ yāo líng hào</span>
+          <span class="en">Your room is on the 5th floor, room 510.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(16)">▶</button>
+          
+          <span class="zh">这是您的房卡。</span>
+          <span class="py">zhè shì nín de fáng kǎ</span>
+          <span class="en">This is your room card.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(17)">▶</button>
+          
+          <span class="zh">谢谢。早饭几点开始？</span>
+          <span class="py">xiè xie. zǎo fàn jǐ diǎn kāi shǐ</span>
+          <span class="en">Thanks. What time does breakfast start?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(18)">▶</button>
+          
+          <span class="zh">早上7点到10点。</span>
+          <span class="py">zǎo shang qī diǎn dào shí diǎn</span>
+          <span class="en">From 7 AM to 10 AM.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(19)">▶</button>
+          
+          <span class="zh">Wi-Fi密码是多少？</span>
+          <span class="py">wài fài mì mǎ shì duō shǎo</span>
+          <span class="en">What&#x27;s the Wi-Fi password?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(20)">▶</button>
+          
+          <span class="zh">你好，我要退房。</span>
+          <span class="py">nǐ hǎo, wǒ yào tuì fáng</span>
+          <span class="en">Hello, I&#x27;d like to check out.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(21)">▶</button>
+          
+          <span class="zh">几点前退房？</span>
+          <span class="py">jǐ diǎn qián tuì fáng</span>
+          <span class="en">What time is check-out?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(22)">▶</button>
+          
+          <span class="zh">12点前退房。</span>
+          <span class="py">shí èr diǎn qián tuì fáng</span>
+          <span class="en">Check-out is before 12 PM.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(23)">▶</button>
+          
+          <span class="zh">请把房卡给我。</span>
+          <span class="py">qǐng bǎ fáng kǎ gěi wǒ</span>
+          <span class="en">Please give me the room card.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(24)">▶</button>
+          
+          <span class="zh">可以刷卡吗？</span>
+          <span class="py">kě yǐ shuā kǎ ma</span>
+          <span class="en">Can I pay by card?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(25)">▶</button>
+          
+          <span class="zh">可以。这是您的账单。</span>
+          <span class="py">kě yǐ. zhè shì nín de zhàng dān</span>
+          <span class="en">Yes. Here&#x27;s your bill.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(26)">▶</button>
+          
+          <span class="zh">可以帮我存行李吗？</span>
+          <span class="py">kě yǐ bāng wǒ cún xíng li ma</span>
+          <span class="en">Can I store my luggage here?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(27)">▶</button>
+          
+          <span class="zh">可以，存到下午5点。</span>
+          <span class="py">kě yǐ, cún dào xià wǔ wǔ diǎn</span>
+          <span class="en">Yes, you can store it until 5 PM.</span>
+        </div>
+<p class="footer" id="footerMsg">Detecting voice...</p>
+</div>
+<div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-box"><button class="pm-close" onclick="closePractice()">&times;</button><h3 style="text-align:center;margin-bottom:2px;color:#1A56DB"><span id="pmWord"></span></h3><p style="text-align:center;font-size:13px;color:#888;margin-bottom:4px" id="pmPinyin"></p><div class="pm-nav" id="pmNav"></div><div class="pm-grid"><div class="pm-ref" id="pmRef"></div><canvas class="pm-canvas" id="pmCanvas" width="240" height="240"></canvas></div><div class="pm-info"><div class="pm-radical" id="pmRadical"></div><div class="pm-rule">Write order: top→bottom, left→right, outside→inside</div></div><div class="pm-actions"><button onclick="playChar()">▶ Audio</button><button onclick="clearCanvas()">✗ Clear</button><button onclick="printSheet()">📝 Print</button></div></div></div><div class="fc-overlay" id="fcOverlay" onclick="if(event.target===this)closeFlashcard()"><div class="fc-box"><h3 style="color:#1A56DB;margin-bottom:4px">🃏 Flashcards</h3><div class="fc-card-wrap"><div class="fc-card" id="fcCard" onclick="flipCard()"><div class="fc-front"><div class="fc-zh" id="fcZh"></div><div class="fc-hint">Click to flip</div></div><div class="fc-back"><div class="fc-py" id="fcPy"></div><div class="fc-en" id="fcEn"></div></div></div></div><div class="fc-actions"><button onclick="flipCard()">Space</button><button onclick="prevCard()">←</button><button onclick="nextCard()">→</button><button onclick="shuffleCards()">🔀</button><button class="fc-primary" onclick="playCard()">▶</button><button onclick="closeFlashcard()">✕</button></div><div class="fc-counter" id="fcCounter"></div></div></div>
+<audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+const texts = ['订','房间','护照','房卡','退房','行李','刷卡','账单','存','毛巾','你好，我订了一个房间。','您叫什么名字？','我叫……这是我的护照。','您住几个晚上？','我住三个晚上。','您的房间在5楼，510号。','这是您的房卡。','谢谢。早饭几点开始？','早上7点到10点。','Wi-Fi密码是多少？','你好，我要退房。','几点前退房？','12点前退房。','请把房卡给我。','可以刷卡吗？','可以。这是您的账单。','可以帮我存行李吗？','可以，存到下午5点。'];
+document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
+
+// Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
+var hz = false;
+function cv() {
+  var v = window.speechSynthesis.getVoices();
+  hz = v.some(function(x) { return x.lang.startsWith('zh'); });
+}
+cv();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = cv;
+}
+
+function play(i) {
+  var text = typeof i === "number" ? texts[i] : i;
+  try {
+    // ① Try Edge TTS local server first (1s timeout, cached after first play)
+    var ctrl = new AbortController();
+    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
+    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
+      .then(function(resp) {
+        clearTimeout(t1);
+        if (!resp.ok) throw new Error('tts');
+        return resp.blob();
+      })
+      .then(function(blob) {
+        var p = document.getElementById('player');
+        p.src = URL.createObjectURL(blob);
+        p.play();
+      })
+      .catch(function() {
+        clearTimeout(t1);
+        speechOrGoogle(text);
+      });
+  } catch(e) {
+    // AbortController not supported → skip Edge TTS
+    speechOrGoogle(text);
+  }
+}
+
+function speechOrGoogle(text) {
+  // ② Web Speech API → ③ Google Translate TTS
+  if (hz) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.9;
+    var voices = speechSynthesis.getVoices();
+    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
+    if (zhVoice) u.voice = zhVoice;
+    var fb = setTimeout(function() {
+      try { speechSynthesis.cancel(); } catch(e) {}
+      googleTTS(text);
+    }, 2500);
+    u.onstart = function() { clearTimeout(fb); };
+    u.onerror = function() {
+      clearTimeout(fb);
+      googleTTS(text);
+    };
+    try { speechSynthesis.cancel(); } catch(e) {}
+    try { speechSynthesis.speak(u); } catch(e) {
+      googleTTS(text);
+    }
+  } else {
+    googleTTS(text);
+  }
+}
+
+function googleTTS(text) {
+  var p = document.getElementById('player');
+  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  p.play();
+}
+
+function playAll() {
+  let i = 0;
+  function n() {
+    if (i >= texts.length) return;
+    play(i);
+    i++;
+    setTimeout(n, 1300);
+  }
+  n();
+}
+
+// ---- Practice + Flashcard ----
+var pChars=[],CHAR_PINYIN={};
+(function(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var btns=r.querySelectorAll('.practice');var zh=r.querySelector('.zh');var py=r.querySelector('.py');
+    if(!btns.length||!zh)return;
+    var word=zh.textContent.trim();
+    for(var i=0;i<word.length;i++){var ch=word[i];if(!/[\u4e00-\u9fff]/.test(ch))continue;if(!seen[ch]){seen[ch]=true;pChars.push(ch);}}
+    if(py){var text=py.textContent.trim();var syls=text.split(/\s+/);var ci=0;for(var j=0;j<word.length;j++){var c=word[j];if(/[\u4e00-\u9fff]/.test(c)){if(ci<syls.length)CHAR_PINYIN[c]=syls[ci];ci++;}}}
+  });
+})();
+var STROKE_DATA={"刷":{"medians":[[[314, 733], [330, 722], [475, 760], [492, 761], [508, 754], [529, 730], [505, 660], [481, 648]], [[294, 569], [317, 580], [453, 612], [491, 617], [535, 613]], [[246, 750], [278, 715], [281, 697], [261, 545], [237, 433], [206, 340], [150, 227], [102, 158], [57, 110]], [[260, 408], [274, 389], [280, 346], [277, 260], [267, 214], [269, 174]], [[306, 397], [314, 387], [525, 426], [550, 404], [546, 265], [537, 229], [528, 217], [454, 243]], [[382, 511], [411, 475], [407, 190], [398, 78], [410, -6]], [[639, 600], [666, 568], [668, 401], [660, 322], [665, 280]], [[786, 789], [834, 750], [834, 386], [845, 101], [840, 70], [824, 39], [779, 54], [727, 80], [708, 98], [698, 98]]],"bounds":{"minX": 57, "maxX": 845, "minY": -6, "maxY": 789}},"单":{"medians":[[[329, 769], [410, 708], [437, 665]], [[621, 827], [634, 818], [651, 789], [559, 668], [538, 645], [528, 644], [520, 630]], [[250, 590], [287, 562], [347, 339]], [[316, 585], [333, 576], [478, 608], [544, 616], [552, 622], [641, 633], [699, 628], [729, 589], [705, 531], [663, 391]], [[384, 471], [411, 472], [558, 506], [585, 509], [607, 503]], [[367, 361], [376, 369], [411, 376], [628, 406], [641, 417]], [[112, 210], [148, 201], [190, 202], [381, 233], [794, 273], [841, 270], [902, 252]], [[459, 584], [505, 558], [503, -61]]],"bounds":{"minX": 112, "maxX": 902, "minY": -61, "maxY": 827}},"卡":{"medians":[[[470, 813], [516, 773], [510, 519], [493, 498]], [[547, 662], [566, 654], [605, 656], [704, 682], [753, 684]], [[128, 438], [186, 428], [424, 464], [806, 502], [850, 499], [914, 480]], [[480, 448], [510, 419], [497, 52], [510, -29]], [[577, 350], [682, 298], [706, 273], [724, 241]]],"bounds":{"minX": 128, "maxX": 914, "minY": -29, "maxY": 813}},"存":{"medians":[[[255, 673], [285, 665], [352, 668], [512, 695], [690, 737], [747, 737]], [[459, 860], [500, 818], [451, 670], [383, 532], [322, 433], [250, 340], [145, 232], [82, 179]], [[261, 461], [300, 389], [295, 231], [280, 85], [286, 20]], [[465, 523], [512, 510], [676, 566], [712, 563], [738, 538], [735, 531], [652, 429], [643, 429]], [[580, 430], [617, 411], [647, 358], [669, 236], [667, 110], [651, 49], [629, 20], [612, 10], [518, 64]], [[378, 276], [432, 272], [558, 300], [799, 339], [843, 341], [902, 327]]],"bounds":{"minX": 82, "maxX": 902, "minY": 10, "maxY": 860}},"巾":{"medians":[[[247, 561], [275, 538], [285, 493], [284, 386], [270, 280], [269, 221]], [[307, 550], [324, 539], [604, 584], [674, 591], [721, 583], [741, 567], [743, 556], [746, 314], [725, 274], [616, 309]], [[456, 803], [469, 803], [494, 788], [521, 759], [511, 592], [503, -37]]],"bounds":{"minX": 247, "maxX": 746, "minY": -37, "maxY": 803}},"房":{"medians":[[[485, 860], [575, 818], [600, 790]], [[387, 650], [400, 665], [656, 719], [684, 705], [703, 684], [682, 634], [647, 606]], [[357, 527], [643, 578], [686, 578], [709, 569]], [[313, 702], [341, 667], [346, 646], [302, 471], [252, 333], [221, 270], [144, 156], [47, 61]], [[512, 509], [571, 469], [592, 434]], [[322, 348], [369, 341], [607, 385], [847, 412], [889, 407], [925, 395]], [[567, 269], [641, 258], [686, 242], [715, 208], [667, 73], [633, 16], [610, -8], [586, -21], [498, 48]], [[525, 343], [549, 314], [495, 212], [439, 144], [382, 94], [332, 61], [217, 7]]],"bounds":{"minX": 47, "maxX": 925, "minY": -21, "maxY": 860}},"护":{"medians":[[[123, 552], [183, 551], [364, 608], [422, 613]], [[286, 826], [302, 818], [333, 786], [321, 623], [313, 154], [293, 112], [193, 159], [192, 166], [181, 166]], [[53, 267], [100, 264], [228, 365], [394, 484]], [[586, 789], [679, 741], [706, 707]], [[551, 578], [564, 567], [757, 619], [789, 615], [815, 585], [785, 508], [753, 489]], [[543, 409], [561, 420], [743, 457], [797, 462], [822, 455]], [[479, 595], [511, 568], [517, 547], [512, 412], [494, 305], [469, 207], [434, 123], [392, 53], [360, 14]]],"bounds":{"minX": 53, "maxX": 822, "minY": 14, "maxY": 826}},"李":{"medians":[[[272, 672], [298, 664], [336, 663], [682, 715], [753, 707]], [[476, 837], [489, 830], [516, 797], [505, 604], [509, 483]], [[480, 655], [432, 593], [331, 497], [244, 436], [155, 394]], [[539, 646], [548, 629], [640, 553], [770, 471], [825, 456], [954, 446]], [[334, 413], [355, 403], [382, 401], [556, 452], [587, 452], [613, 425], [527, 330], [517, 331]], [[458, 342], [515, 293], [525, 267], [536, 158], [535, 85], [526, 30], [512, 3], [500, -7], [382, 44]], [[100, 222], [154, 211], [401, 245], [809, 280], [879, 274], [926, 257]]],"bounds":{"minX": 100, "maxX": 954, "minY": -7, "maxY": 837}},"毛":{"medians":[[[614, 772], [535, 778], [429, 702], [359, 669], [353, 661], [287, 638], [263, 623]], [[244, 469], [285, 465], [345, 474], [575, 542], [641, 548]], [[91, 254], [162, 244], [683, 381], [746, 377]], [[377, 648], [415, 636], [439, 606], [435, 202], [443, 154], [458, 117], [498, 78], [581, 55], [709, 51], [822, 65], [888, 89], [926, 113], [933, 308]]],"bounds":{"minX": 91, "maxX": 933, "minY": 51, "maxY": 778}},"照":{"medians":[[[199, 744], [218, 724], [228, 697], [234, 564], [221, 351], [229, 301]], [[250, 731], [265, 727], [362, 756], [390, 747], [405, 733], [409, 431], [406, 372], [398, 346], [404, 302]], [[259, 524], [271, 540], [285, 544], [319, 550], [341, 547]], [[254, 334], [267, 349], [364, 370]], [[495, 737], [539, 730], [742, 777], [778, 781], [791, 775], [805, 760], [795, 692], [775, 616], [750, 575], [728, 555], [652, 598]], [[607, 720], [624, 705], [626, 695], [595, 625], [522, 521], [459, 467]], [[508, 449], [529, 431], [540, 409], [568, 274]], [[550, 448], [570, 439], [729, 473], [753, 470], [781, 441], [758, 375], [732, 358]], [[585, 319], [596, 312], [742, 333], [785, 326]], [[218, 205], [195, 128], [155, 59], [147, 32]], [[343, 213], [405, 131], [413, 104]], [[535, 221], [602, 133], [610, 109]], [[730, 226], [849, 98], [860, 79], [872, 32]]],"bounds":{"minX": 147, "maxX": 872, "minY": 32, "maxY": 781}},"行":{"medians":[[[334, 817], [352, 793], [358, 771], [338, 738], [241, 620], [196, 578], [156, 553]], [[331, 615], [350, 591], [357, 564], [324, 514], [266, 439], [176, 346], [120, 297], [77, 269]], [[270, 407], [285, 352], [283, 220], [272, 94], [278, 34]], [[541, 659], [606, 655], [748, 693], [808, 695]], [[414, 449], [463, 443], [590, 473], [889, 520], [971, 504]], [[673, 455], [708, 435], [715, 425], [717, 108], [712, 58], [689, 15], [645, 30], [580, 70]]],"bounds":{"minX": 77, "maxX": 971, "minY": 15, "maxY": 817}},"订":{"medians":[[[305, 811], [395, 753], [433, 698]], [[103, 482], [145, 476], [181, 482], [291, 529], [330, 528], [339, 518], [303, 197], [310, 151], [365, 168], [479, 255]], [[480, 590], [531, 579], [862, 633], [936, 624]], [[677, 568], [720, 539], [720, 99], [698, 60], [655, 72], [573, 113]]],"bounds":{"minX": 103, "maxX": 936, "minY": 60, "maxY": 811}},"账":{"medians":[[[154, 689], [178, 665], [189, 644], [192, 463], [173, 314], [175, 264]], [[203, 676], [227, 671], [356, 702], [380, 691], [398, 670], [391, 611], [394, 334], [387, 268]], [[248, 557], [265, 551], [295, 525], [290, 349], [267, 210], [245, 157], [217, 118], [157, 74], [93, 43]], [[331, 214], [391, 152], [408, 103]], [[745, 728], [773, 695], [770, 674], [712, 575], [653, 502], [627, 481]], [[449, 365], [500, 361], [802, 422], [857, 422], [901, 411]], [[514, 751], [540, 737], [559, 716], [563, 667], [569, 415], [564, 406], [562, 213], [552, 90], [557, 50], [589, 58], [713, 151]], [[624, 365], [654, 354], [755, 231], [854, 138], [975, 116]]],"bounds":{"minX": 93, "maxX": 975, "minY": 43, "maxY": 751}},"退":{"medians":[[[521, 746], [535, 734], [549, 743], [682, 777], [713, 777], [729, 768], [751, 737], [731, 678], [698, 522]], [[528, 603], [536, 614], [575, 625], [622, 634], [653, 630]], [[527, 502], [545, 513], [658, 538], [674, 548]], [[455, 756], [485, 724], [494, 694], [501, 487], [489, 253], [507, 253], [545, 267], [642, 322]], [[788, 522], [799, 507], [803, 487], [698, 390]], [[589, 421], [693, 350], [790, 273], [815, 245], [835, 205]], [[225, 763], [315, 698], [341, 654]], [[105, 467], [170, 470], [281, 508], [301, 502], [317, 487], [307, 444], [274, 391], [266, 361], [271, 320], [311, 218], [313, 204], [304, 191]], [[103, 150], [146, 132], [251, 162], [288, 165], [339, 158], [602, 65], [746, 35], [815, 34], [925, 65]]],"bounds":{"minX": 103, "maxX": 925, "minY": 34, "maxY": 777}},"间":{"medians":[[[289, 773], [354, 720], [376, 688]], [[189, 696], [231, 648], [233, 583], [224, 283], [218, 213], [200, 119], [199, 50]], [[480, 738], [512, 731], [546, 734], [654, 759], [742, 768], [771, 758], [795, 732], [801, 94], [779, 41], [721, 57], [638, 99]], [[371, 533], [392, 513], [399, 437], [384, 231]], [[423, 507], [432, 517], [452, 523], [464, 521], [474, 528], [582, 552], [599, 548], [622, 527], [628, 325], [624, 285], [613, 260], [617, 208]], [[423, 386], [432, 396], [495, 410], [544, 407]], [[415, 267], [427, 277], [450, 282], [562, 297], [583, 294]]],"bounds":{"minX": 189, "maxX": 801, "minY": 41, "maxY": 773}}};
+var RADICAL_DATA={"单":{"radical":"十","radicalName":"十字旁","radicalNamePy":"shí zì páng","meaning":"ten","desc":"ten — completeness, many"},"房":{"radical":"户","radicalName":"户字头","radicalNamePy":"hù zì tóu","meaning":"door","desc":"door/household — dwelling-related"},"护":{"radical":"手","radicalName":"提手旁","radicalNamePy":"tí shǒu páng","meaning":"hand","desc":"hand — action/manipulation-related"},"李":{"radical":"木","radicalName":"木字旁","radicalNamePy":"mù zì páng","meaning":"wood","desc":"wood/tree — plant/material-related"},"照":{"radical":"火","radicalName":"火字旁","radicalNamePy":"huǒ zì páng","meaning":"fire","desc":"fire — heat/burning-related"},"行":{"radical":"行","radicalName":"行字旁","radicalNamePy":"xíng zì páng","meaning":"go","desc":"go/walk — movement, conduct"},"间":{"radical":"门","radicalName":"门字框","radicalNamePy":"mén zì kuāng","meaning":"gate","desc":"gate/door — portal, entrance"}};
+
+var curCharIdx=0,curWord='';
+function openPractice(word){curWord=word;curCharIdx=0;var nav=document.getElementById('pmNav'),h='';for(var j=0;j<word.length;j++){if(/[\u4e00-\u9fff]/.test(word[j]))h+='<button class="pm-nav-btn'+(curCharIdx===0?' active':'')+'" onclick="loadChar('+j+')">'+word[j]+'</button>';}nav.innerHTML=h;document.getElementById('pmWord').textContent='Word: '+word;initCanvas();document.getElementById('pm').classList.add('show');showChar();}
+function showChar(){var ch='',k=0;for(var j=0;j<curWord.length;j++){if(/[\u4e00-\u9fff]/.test(curWord[j])){if(k===curCharIdx){ch=curWord[j];break;}k++;}}if(!ch)return;document.getElementById('pmRef').textContent=ch;document.getElementById('pmPinyin').textContent=CHAR_PINYIN[ch]||'';var btns=document.querySelectorAll('#pmNav .pm-nav-btn');btns.forEach(function(b,i){b.classList.toggle('active',i===curCharIdx);});var radEl=document.getElementById('pmRadical');if(typeof RADICAL_DATA!=='undefined'&&RADICAL_DATA[ch]){var r=RADICAL_DATA[ch];radEl.innerHTML=r.radical+' '+r.radicalName+' '+r.radicalNamePy+' &mdash; "'+r.meaning+'" radical &mdash; '+r.desc;}else{radEl.textContent='';}clearCanvas();}
+function loadChar(i){curCharIdx=i;showChar();}
+function playChar(){var ch=document.getElementById('pmRef').textContent;if(ch&&typeof play==='function')play(ch);}
+var pmCanvas=null,pmCtx=null;
+function initCanvas(){pmCanvas=document.getElementById('pmCanvas');if(!pmCanvas||pmCanvas.__init)return;pmCanvas.__init=true;pmCtx=pmCanvas.getContext('2d');pmCtx.strokeStyle='#D32F2F';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';var drawing=false;pmCanvas.addEventListener('pointerdown',function(e){drawing=true;pmCtx.beginPath();pmCtx.moveTo(e.offsetX,e.offsetY);e.preventDefault();});pmCanvas.addEventListener('pointermove',function(e){if(!drawing)return;pmCtx.lineTo(e.offsetX,e.offsetY);pmCtx.stroke();});pmCanvas.addEventListener('pointerup',function(){drawing=false;});pmCanvas.addEventListener('pointerleave',function(){drawing=false;});}
+function clearCanvas(){if(pmCtx)pmCtx.clearRect(0,0,240,240);}
+function closePractice(){document.getElementById('pm').classList.remove('show');}
+function printSheet(){var w=window.open('','_blank');var h='<!DOCTYPE html><html><head><meta charset=UTF-8><title>Practice Sheet</title><style>body{font-family:KaiTi,serif;padding:20px}h2{text-align:center}.grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.cell{width:100px;height:100px;border:1px solid #ccc;position:relative;display:flex;align-items:center;justify-content:center;font-size:60px;color:rgba(0,0,0,.15)}.cell::before{content:"\00a0";position:absolute;inset:0;background:linear-gradient(transparent 49%,#eee 49%,#eee 51%,transparent 51%),linear-gradient(90deg,transparent 49%,#eee 49%,#eee 51%,transparent 51%)}</style></head><body><h2>Practice Sheet</h2><div class=grid>';for(var c=0;c<pChars.length;c++)h+='<div class=cell>'+pChars[c]+'</div>';h+='</div></body></html>';w.document.write(h);w.document.close();}
+
+// ---- Flashcard ----
+var fcData=[],fcOrder=[],fcIdx=0;
+function initFlashcardData(){var rows=document.querySelectorAll('.row');rows.forEach(function(r){var b=r.querySelector('.practice');var zh=r.querySelector('.zh');var py=r.querySelector('.py');var en=r.querySelector('.en');if(!b||!zh)return;fcData.push({zh:zh.textContent.trim().replace(/^\w+:?\s*/,''),py:py?py.textContent.trim():'',en:en?en.textContent.trim():''});});}
+function shuffleCards(){for(var i=fcOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=fcOrder[i];fcOrder[i]=fcOrder[j];fcOrder[j]=t;}fcIdx=0;showCard();}
+function openFlashcard(){if(!fcOrder.length){fcOrder=[];for(var i=0;i<fcData.length;i++)fcOrder.push(i);}shuffleCards();document.getElementById('fcOverlay').classList.add('show');}
+function closeFlashcard(){document.getElementById('fcOverlay').classList.remove('show');}
+function showCard(){if(!fcOrder.length)return;var d=fcData[fcOrder[fcIdx]];document.getElementById('fcZh').textContent=d.zh;document.getElementById('fcPy').textContent=d.py;document.getElementById('fcEn').textContent=d.en;document.getElementById('fcCard').classList.remove('flipped');document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcOrder.length;}
+function flipCard(){document.getElementById('fcCard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcOrder.length;showCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcOrder.length)%fcOrder.length;showCard();}
+function playCard(){var d=fcData[fcOrder[fcIdx]];if(typeof play==='function')play(d.zh);}
+document.addEventListener('keydown',function(e){if(!document.getElementById('fcOverlay').classList.contains('show'))return;if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard();}else if(e.key==='ArrowRight')nextCard();else if(e.key==='ArrowLeft')prevCard();else if(e.key==='r')shuffleCards();else if(e.key==='Escape')closeFlashcard();});
+initFlashcardData();
+
+
+/* ---- Stroke Animation ---- */
+function loadStroke(ch){
+  animPause();
+  if(typeof STROKE_DATA==='undefined'||!STROKE_DATA[ch]){strokeData=null;return}
+  var sd=STROKE_DATA[ch];strokeData={medians:sd.medians,bounds:sd.bounds};
+  animStk=0;animPt=0;
+  clearAnimCanvas();
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function clearAnimCanvas(){if(animCtx){var c=document.getElementById('animCanvas');animCtx.clearRect(0,0,c.width,c.height)}}
+function animToggle(){
+  if(animTimer){animPause();return}
+  if(!strokeData||animStk>=strokeData.medians.length){animStk=0;animPt=0;clearAnimCanvas()}
+  if(animStk===0&&animPt===0){document.getElementById('animPlayBtn').textContent='\u23f8';animPlay()}
+}
+function animPlay(){
+  if(!strokeData||animStk>=strokeData.medians.length){if(animLoop){animStk=0;animPt=0;clearAnimCanvas();document.getElementById('animPlayBtn').textContent='\u23f8'}else{animPause();return}}
+  var med=strokeData.medians[animStk];
+  animTimer=setTimeout(function(){
+    animPt++;
+    animDrawCurrentState();
+    if(animPt<med.length){animPlay()}
+    else{animStk++;animPt=0;if(animStk<strokeData.medians.length){clearAnimCanvas();for(var s=0;s<animStk;s++)drawStroke(s,1)}animPlay()}
+  },40/animSpeedMult);
+}
+function animDrawCurrentState(){
+  if(!strokeData||animStk>=strokeData.medians.length)return;
+  var med=strokeData.medians[animStk];
+  if(!med||animPt<=0)return;
+  for(var s=0;s<animStk;s++)drawStroke(s,1);
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<animPt;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function drawStroke(s,full){
+  if(!strokeData)return;
+  var med=strokeData.medians[s];if(!med)return;
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<med.length;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function animPause(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null}
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+
+</script>
+</body>
+</html>
