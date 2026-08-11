@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connor - 260811</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
+  .date{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+
+  .row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:8px}
+  .row.gram{border-bottom:1px solid #d0e1fd}
+  .zh{font-size:17px;font-weight:bold;flex:1;min-width:0;overflow:hidden;color:#333}
+  .py{font-size:13px;color:#999;flex:1;min-width:0;overflow:hidden;font-style:italic}
+  .en{font-size:13px;color:#555;flex:1;min-width:0;overflow:hidden;word-break:break-word}
+
+  .play{width:32px;height:32px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{background:#1A56DB;color:#fff}
+  .play-placeholder{width:32px;flex-shrink:0}
+
+  .play-all{display:block;margin:0 auto 16px;padding:9px 24px;border:none;border-radius:8px;background:#1A56DB;color:#fff;font-size:14px;cursor:pointer}
+  .play-all:hover{background:#1548b8}
+  .sec{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
+  .back{display:inline-block;color:#1A56DB;text-decoration:none;font-size:13px;margin-bottom:10px}.back:hover{text-decoration:underline}
+  .lesson-label{text-align:center;color:#1A56DB;font-size:13px;font-weight:bold;padding:10px 0 6px;margin-top:8px;border-top:2px solid #1A56DB}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:16px}
+
+
+
+
+/* --- Hanzi Practice --- */
+.practice{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px}
+.practice:hover{background:#1A56DB;color:#fff}
+.pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
+.pm-overlay.open{display:flex}
+.pm-panel{background:#fff;border-radius:12px;padding:18px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
+.pm-radical{font-size:11px;color:#168F16;margin-bottom:2px;min-height:15px;font-weight:bold}
+.pm-title-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1px}
+.pm-title{font-size:17px;color:#333}
+.pm-pinyin{font-size:13px;color:#999;font-style:italic}
+.pm-grid{position:relative;width:280px;height:280px;margin:0 auto 10px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden}
+.anim-canvas{position:absolute;inset:0;z-index:2;pointer-events:none}
+.pm-canvas{position:absolute;inset:0;z-index:3;cursor:crosshair;touch-action:none}
+.pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.pm-nav-btn{padding:5px 11px;border:1px solid #ddd;border-radius:4px;font-size:14px;cursor:pointer;background:#fff;font-family:KaiTi,STKaiti,楷体,serif;min-width:34px;text-align:center}.pm-nav-btn:hover{border-color:#E65100;color:#E65100}.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
+.pm-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-audio{background:#E8F0FE;color:#1A56DB}.pm-btn-audio:hover{background:#1A56DB;color:#fff}
+.pm-btn-anim{background:#43A047;color:#fff}.pm-btn-anim:hover{background:#2E7D32}.pm-speed{display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0 2px;font-size:11px;color:#888}
+.pm-speed input{width:80px;cursor:pointer}
+@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
+
+/* --- Flashcard --- */
+.fc-btn{display:inline-block;margin:0 8px;padding:9px 24px;border:none;border-radius:8px;background:#E67E22;color:#fff;font-size:14px;cursor:pointer;vertical-align:middle}
+.fc-btn:hover{background:#D35400}
+.fc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:999;justify-content:center;align-items:center}
+.fc-overlay.show{display:flex}
+.fc-box{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center}
+.fc-card-wrap{perspective:800px;margin:16px 0}
+.fc-card{width:200px;height:260px;margin:0 auto;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px}
+.fc-front{background:#E8F0FE;color:#1A56DB}
+.fc-front .fc-zh{font-size:52px;margin-bottom:12px}
+.fc-front .fc-hint{font-size:12px;color:#999}
+.fc-back{background:#F0F8E8;transform:rotateY(180deg)}
+.fc-back .fc-py{font-size:22px;color:#1A56DB;margin-bottom:8px}
+.fc-back .fc-en{font-size:16px;color:#555}
+.fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.fc-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333}
+.fc-actions button:hover{background:#E8F0FE;color:#1A56DB}
+.fc-primary{background:#E67E22!important;color:#fff!important;border-color:#E67E22!important}
+.fc-primary:hover{background:#D35400!important;color:#fff!important}
+.fc-counter{font-size:12px;color:#999;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../">&larr; Back</a>
+<h1>Connor - Class Notes</h1>
+<p class="date">260811 &nbsp;|&nbsp; 🔊 Click ▶ to hear pronunciation</p>
+<button class="play-all" onclick="playAll()">▶ Play All Vocabulary &amp; Sentences</button><button class="fc-btn" onclick="openFlashcard()">🃏 Flashcards</button>
+
+
+        <div class="sec">&#128214; Vocabulary</div>
+
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(0)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">橙子</span>
+          <span class="py">chéng zi</span>
+          <span class="en">orange</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(1)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">汁</span>
+          <span class="py">zhī</span>
+          <span class="en">juice</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(2)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">介绍</span>
+          <span class="py">jiè shào</span>
+          <span class="en">to introduce</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(3)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">高兴</span>
+          <span class="py">gāo xìng</span>
+          <span class="en">happy</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(4)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">认识</span>
+          <span class="py">rèn shí</span>
+          <span class="en">to know (someone)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(5)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">高</span>
+          <span class="py">gāo</span>
+          <span class="en">high; tall</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(6)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">多</span>
+          <span class="py">duō</span>
+          <span class="en">many; how</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(7)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">少</span>
+          <span class="py">shǎo</span>
+          <span class="en">few; a little</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(8)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">饭</span>
+          <span class="py">fàn</span>
+          <span class="en">rice; meal</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(9)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">早上</span>
+          <span class="py">zǎo shàng</span>
+          <span class="en">early morning</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(10)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">上午</span>
+          <span class="py">shàng wǔ</span>
+          <span class="en">morning (9-11am)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(11)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">中午</span>
+          <span class="py">zhōng wǔ</span>
+          <span class="en">noon</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(12)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">晚上</span>
+          <span class="py">wǎn shàng</span>
+          <span class="en">evening</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(13)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">早饭</span>
+          <span class="py">zǎo fàn</span>
+          <span class="en">breakfast</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(14)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">午饭</span>
+          <span class="py">wǔ fàn</span>
+          <span class="en">lunch</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(15)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">晚饭</span>
+          <span class="py">wǎn fàn</span>
+          <span class="en">dinner</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(16)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">公园</span>
+          <span class="py">gōng yuán</span>
+          <span class="en">park</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(17)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">早</span>
+          <span class="py">zǎo</span>
+          <span class="en">early</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(18)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">晚</span>
+          <span class="py">wǎn</span>
+          <span class="en">late</span>
+        </div>
+        <div class="sec">&#128218; Grammar</div>
+
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">来 + V</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">come and do V (I&#x27;ll do it)</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(19)">▶</button>
+          
+          <span class="zh">我来说。</span>
+          <span class="py">wǒ lái shuō 。</span>
+          <span class="en">Let me say it.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(20)">▶</button>
+          
+          <span class="zh">你来说。</span>
+          <span class="py">nǐ lái shuō 。</span>
+          <span class="en">You say it.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(21)">▶</button>
+          
+          <span class="zh">我来买。</span>
+          <span class="py">wǒ lái mǎi 。</span>
+          <span class="en">Let me buy it.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">V + 一下</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">do V for a moment / briefly</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(22)">▶</button>
+          
+          <span class="zh">我来说一下。</span>
+          <span class="py">wǒ lái shuō yī xià 。</span>
+          <span class="en">Let me say a few words.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(23)">▶</button>
+          
+          <span class="zh">你来看一下。</span>
+          <span class="py">nǐ lái kàn yī xià 。</span>
+          <span class="en">Come and take a look.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(24)">▶</button>
+          
+          <span class="zh">听一下。</span>
+          <span class="py">tīng yī xià 。</span>
+          <span class="en">Have a listen.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(25)">▶</button>
+          
+          <span class="zh">吃一下。</span>
+          <span class="py">chī yī xià 。</span>
+          <span class="en">Try a bite.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(26)">▶</button>
+          
+          <span class="zh">你快来一下。</span>
+          <span class="py">nǐ kuài lái yī xià 。</span>
+          <span class="en">Come here quickly.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">多少 vs 几</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">how many — 多少 (larger amounts) vs 几 (small, &lt;10)</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(27)">▶</button>
+          
+          <span class="zh">你多高？</span>
+          <span class="py">nǐ duō gāo ？</span>
+          <span class="en">How tall are you?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(28)">▶</button>
+          
+          <span class="zh">一米八。</span>
+          <span class="py">yī mǐ bā 。</span>
+          <span class="en">1.8 meters.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(29)">▶</button>
+          
+          <span class="zh">你多大？</span>
+          <span class="py">nǐ duō dà ？</span>
+          <span class="en">How old are you?</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">A 比 B + Adj</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">A is more adj than B (comparison)</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(30)">▶</button>
+          
+          <span class="zh">你比我高。</span>
+          <span class="py">nǐ bǐ wǒ gāo 。</span>
+          <span class="en">You are taller than me.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(31)">▶</button>
+          
+          <span class="zh">我比你大。</span>
+          <span class="py">wǒ bǐ nǐ dà 。</span>
+          <span class="en">I am older than you.</span>
+        </div>
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">时间词 + 好：早上/上午/中午/下午/晚上</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">times of day + greetings</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(32)">▶</button>
+          
+          <span class="zh">早上好。</span>
+          <span class="py">zǎo shàng hǎo 。</span>
+          <span class="en">Good morning.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(33)">▶</button>
+          
+          <span class="zh">上午好。</span>
+          <span class="py">shàng wǔ hǎo 。</span>
+          <span class="en">Good morning (late).</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(34)">▶</button>
+          
+          <span class="zh">中午好。</span>
+          <span class="py">zhōng wǔ hǎo 。</span>
+          <span class="en">Good noon.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(35)">▶</button>
+          
+          <span class="zh">下午好。</span>
+          <span class="py">xià wǔ hǎo 。</span>
+          <span class="en">Good afternoon.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(36)">▶</button>
+          
+          <span class="zh">晚上好。</span>
+          <span class="py">wǎn shàng hǎo 。</span>
+          <span class="en">Good evening.</span>
+        </div>
+        <div class="sec">&#128172; Sentences</div>
+
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(37)">▶</button>
+          
+          <span class="zh">你好，我很高兴认识你。</span>
+          <span class="py">nǐ hǎo ， wǒ hěn gāo xìng rèn shí nǐ 。</span>
+          <span class="en">Hello, I&#x27;m very happy to meet you.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(38)">▶</button>
+          
+          <span class="zh">我叫卡斯珀，我姓Wherry。</span>
+          <span class="py">wǒ jiào kǎ sī pò ， wǒ xìng Wherry。</span>
+          <span class="en">My name is Kasper, my surname is Wherry.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(39)">▶</button>
+          
+          <span class="zh">我在澳大利亚，我今年二十三岁。</span>
+          <span class="py">wǒ zài ào dà lì yà ， wǒ jīn nián èr shí sān suì 。</span>
+          <span class="en">I&#x27;m in Australia, and I&#x27;m 23 this year.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(40)">▶</button>
+          
+          <span class="zh">我喜欢吃饺子，喝橙汁。</span>
+          <span class="py">wǒ xǐ huān chī jiǎo zi ， hē chéng zhī 。</span>
+          <span class="en">I like eating dumplings and drinking orange juice.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(41)">▶</button>
+          
+          <span class="zh">我早上在公园跑步。</span>
+          <span class="py">wǒ zǎo shàng zài gōng yuán pǎo bù 。</span>
+          <span class="en">I run in the park in the morning.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(42)">▶</button>
+          
+          <span class="zh">你吃早饭了吗？</span>
+          <span class="py">nǐ chī zǎo fàn le ma ？</span>
+          <span class="en">Have you had breakfast?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(43)">▶</button>
+          
+          <span class="zh">吃了，你呢？</span>
+          <span class="py">chī le ， nǐ ne ？</span>
+          <span class="en">Yes, and you?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(44)">▶</button>
+          
+          <span class="zh">我没吃。</span>
+          <span class="py">wǒ méi chī 。</span>
+          <span class="en">I haven&#x27;t.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(45)">▶</button>
+          
+          <span class="zh">你吃早饭吗？</span>
+          <span class="py">nǐ chī zǎo fàn ma ？</span>
+          <span class="en">Do you eat breakfast?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(46)">▶</button>
+          
+          <span class="zh">我吃早饭。</span>
+          <span class="py">wǒ chī zǎo fàn 。</span>
+          <span class="en">I eat breakfast.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(47)">▶</button>
+          
+          <span class="zh">你中午吃了什么？</span>
+          <span class="py">nǐ zhōng wǔ chī le shén me ？</span>
+          <span class="en">What did you eat for lunch?</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(48)">▶</button>
+          
+          <span class="zh">我中午吃了面条。</span>
+          <span class="py">wǒ zhōng wǔ chī le miàn tiáo 。</span>
+          <span class="en">I had noodles for lunch.</span>
+        </div>
+<p class="footer" id="footerMsg">Detecting voice...</p>
+
+<style>
+.section-hdr{margin:26px 0 12px;padding-bottom:8px;border-bottom:2px solid #1A56DB}
+.section-hdr h2{font-size:18px;color:#1A56DB;margin:0}
+.section-hdr p{font-size:12px;color:#999;margin:5px 0 0}
+.tp-row{display:flex;align-items:center;gap:10px;padding:12px 18px;background:#fff;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);border-left:4px solid #E8F0FE}
+.tp-num{font-size:14px;color:#999;font-weight:bold;min-width:36px;text-align:right;padding-right:10px;flex-shrink:0}
+.tp-body{flex:1;min-width:0;font-size:16px;color:#333}
+.tp-hint{font-size:12px;font-style:italic;color:#999;min-width:170px;text-align:right;flex-shrink:0}
+.zh-line{display:flex;flex-wrap:wrap;align-items:flex-end}
+.zh-word{display:inline-flex;flex-direction:column;align-items:center}
+.zh-word .han{font-size:16px;line-height:1.3;color:#333}
+.zh-word .py{font-size:11px;color:#999;line-height:1.1;margin-top:2px}
+.zh-spacer{display:inline-block;width:.55em}
+.zh-blank{display:inline-block;min-width:56px;border-bottom:2px dashed #999;color:#2c7be5;font-weight:bold;text-align:center;margin:0 2px;font-size:15px}
+.zh-sep{display:inline-flex;align-items:center;color:#bbb;font-size:16px;padding:0 10px}
+.word-bank{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;margin:0 0 14px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0}
+.word-bank span{background:#fff;padding:5px 10px;border-radius:4px;border:1px solid #ddd;font-size:14px;color:#333;display:inline-flex;flex-direction:column;align-items:center}
+.word-bank .wb-py{font-size:10px;color:#999;line-height:1.2}
+.q-label{font-size:13px;color:#1A56DB;font-weight:bold;margin:14px 0 6px;padding-left:46px}
+.q-row{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#f8faff;border-radius:8px;margin-bottom:8px;border-left:4px solid #d0e1fd}
+.options{margin:0 0 18px;padding-left:46px}
+.opt{display:flex;align-items:center;gap:10px;padding:8px 14px;margin:6px 0;background:#fafafa;border-radius:6px;border:1px solid #eee}
+.opt-letter{font-size:14px;color:#1A56DB;font-weight:bold;min-width:20px;flex-shrink:0}
+.speed-bar{display:flex;align-items:center;gap:6px;margin:14px 0 16px;flex-wrap:wrap}
+.speed-label{font-size:13px;color:#666;font-weight:bold}
+.speed-btn{padding:4px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555}
+.speed-btn.active{background:#1A56DB;color:#fff;border-color:#1A56DB}
+.play{font-size:15px;background:#E8F0FE;border:1px solid #d0e1fd;border-radius:50%;width:34px;height:34px;cursor:pointer;color:#185FA5;line-height:1}
+/* v7.44 中高级开放题 */
+.act-badge{display:inline-block;background:#FFF4E5;color:#B26A00;border:1px solid #FAC775;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:bold;flex-shrink:0;margin-right:2px}
+.ref-box{margin:10px 0 2px;border:1px dashed #c9d8f0;border-radius:6px;padding:6px 12px;background:#f7faff}
+.ref-box summary{cursor:pointer;font-size:13px;color:#185FA5;font-weight:bold}
+.ref-content{font-size:14px;color:#444;line-height:1.7;padding-top:6px}
+.ord-item{display:flex;align-items:flex-start;gap:8px;margin:6px 0}
+.ord-item .opt-letter{min-width:22px}
+.open-note{font-size:12px;color:#B26A00;margin:4px 0 0}
+</style>
+<div class="section-hdr"><h2>Listening</h2><p>听一听，说一说</p></div><div class="speed-bar"><span class="speed-label">Speed:</span><button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button><button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button><button class="speed-btn active" onclick="setSpeed(1)">1x</button><button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button><button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button></div><div class="tp-row"><div class="tp-num">1.</div><div class="tp-body"><button class="play" onclick="play('我早上在公园跑步。')">▶</button></div><div class="tp-hint">💡 Listen and repeat · say meaning</div></div><div class="tp-row"><div class="tp-num">2.</div><div class="tp-body"><button class="play" onclick="play('你喜欢吃饺子吗？')">▶</button></div><div class="tp-hint">💡 Listen and repeat · say meaning</div></div><div class="tp-row"><div class="tp-num">3.</div><div class="tp-body"><button class="play" onclick="play('我今年二十三岁。')">▶</button></div><div class="tp-hint">💡 Listen and repeat · say meaning</div></div><div class="tp-row"><div class="tp-num">4.</div><div class="tp-body"><button class="play" onclick="play('他中午吃面条，晚上吃饺子。')">▶</button></div><div class="tp-hint">💡 Listen to dialogue · choose answer</div></div><div class="q-row"><div class="tp-num">4.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">他</span><span class="py">tā</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">中</span><span class="py">zhōng</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">午</span><span class="py">wǔ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">吃</span><span class="py">chī</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">什</span><span class="py">shén</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">么</span><span class="py">me</span></span><span class="zh-word"><span class="han">？</span><span class="py"></span></span></div></div></div><div class="options"><div class="opt" data-correct="true"><span class="opt-letter">A.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">面</span><span class="py">miàn</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">条</span><span class="py">tiáo</span></span></div></div></div><div class="opt"><span class="opt-letter">B.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">饺</span><span class="py">jiǎo</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">子</span><span class="py">zi</span></span></div></div></div><div class="opt"><span class="opt-letter">C.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">早</span><span class="py">zǎo</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">饭</span><span class="py">fàn</span></span></div></div></div><div class="opt"><span class="opt-letter">D.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">橙</span><span class="py">chéng</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">汁</span><span class="py">zhī</span></span></div></div></div></div><div class="tp-row"><div class="tp-num">5.</div><div class="tp-body"><button class="play" onclick="play('他多高？——一米八。')">▶</button></div><div class="tp-hint">💡 Listen to dialogue · choose answer</div></div><div class="q-row"><div class="tp-num">5.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">他</span><span class="py">tā</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">多</span><span class="py">duō</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">高</span><span class="py">gāo</span></span><span class="zh-word"><span class="han">？</span><span class="py"></span></span></div></div></div><div class="options"><div class="opt" data-correct="true"><span class="opt-letter">A.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">一</span><span class="py">yī</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">米</span><span class="py">mǐ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">八</span><span class="py">bā</span></span></div></div></div><div class="opt"><span class="opt-letter">B.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">一</span><span class="py">yī</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">米</span><span class="py">mǐ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">七</span><span class="py">qī</span></span></div></div></div><div class="opt"><span class="opt-letter">C.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">一</span><span class="py">yī</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">米</span><span class="py">mǐ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">六</span><span class="py">liù</span></span></div></div></div><div class="opt"><span class="opt-letter">D.</span><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">一</span><span class="py">yī</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">米</span><span class="py">mǐ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">九</span><span class="py">jiǔ</span></span></div></div></div></div><div class="section-hdr"><h2>Fill in the Blanks</h2><p>选词填空</p></div><div class="word-bank"><span>早饭<span class="wb-py">zǎo fàn</span></span><span>高兴<span class="wb-py">gāo xìng</span></span><span>橙汁<span class="wb-py">chéng zhī</span></span><span>高<span class="wb-py">gāo</span></span><span>公园<span class="wb-py">gōng yuán</span></span><span>午饭<span class="wb-py">wǔ fàn</span></span><span>认识<span class="wb-py">rèn shí</span></span><span>晚上<span class="wb-py">wǎn shàng</span></span><span>面条<span class="wb-py">miàn tiáo</span></span><span>多<span class="wb-py">duō</span></span></div><div class="tp-row"><div class="tp-num">1.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">她</span><span class="py">tā</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">吃</span><span class="py">chī</span></span><span class="zh-blank">______</span><span class="zh-spacer"></span><span class="zh-word"><span class="han">了</span><span class="py">le</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">吗</span><span class="py">ma</span></span><span class="zh-word"><span class="han">？</span><span class="py"></span></span></div></div><div class="tp-hint">💡 答案在词库</div></div><div class="tp-row"><div class="tp-num">2.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">他</span><span class="py">tā</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">今</span><span class="py">jīn</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">天</span><span class="py">tiān</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">很</span><span class="py">hěn</span></span><span class="zh-blank">______</span><span class="zh-word"><span class="han">。</span><span class="py"></span></span></div></div><div class="tp-hint">💡 答案在词库</div></div><div class="tp-row"><div class="tp-num">3.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">我</span><span class="py">wǒ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">喝</span><span class="py">hē</span></span><span class="zh-blank">______</span><span class="zh-word"><span class="han">。</span><span class="py"></span></span></div></div><div class="tp-hint">💡 答案在词库</div></div><div class="tp-row"><div class="tp-num">4.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">他</span><span class="py">tā</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">比</span><span class="py">bǐ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">我</span><span class="py">wǒ</span></span><span class="zh-blank">______</span><span class="zh-word"><span class="han">。</span><span class="py"></span></span></div></div><div class="tp-hint">💡 答案在词库</div></div><div class="tp-row"><div class="tp-num">5.</div><div class="tp-body"><div class="zh-line"><span class="zh-word"><span class="han">我</span><span class="py">wǒ</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">们</span><span class="py">men</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">去</span><span class="py">qù</span></span><span class="zh-blank">______</span><span class="zh-spacer"></span><span class="zh-word"><span class="han">跑</span><span class="py">pǎo</span></span><span class="zh-spacer"></span><span class="zh-word"><span class="han">步</span><span class="py">bù</span></span><span class="zh-word"><span class="han">。</span><span class="py"></span></span></div></div><div class="tp-hint">💡 答案在词库</div></div></div>
+
+<div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-panel"><div class="pm-nav" id="pmNav"></div><div class="pm-radical" id="pmRadical"></div><div class="pm-title-row"><span class="pm-title" id="pmTitle"></span><span class="pm-pinyin" id="pmPinyin"></span></div><div class="pm-hint" id="pmHint">Trace the character in the grid</div><div class="pm-grid"><canvas class="anim-canvas" id="animCanvas"></canvas><canvas class="pm-canvas" id="pmCanvas"></canvas></div><div class="pm-speed"><span>Speed:</span><input type="range" id="animSpeed" min="5" max="300" value="15"><span id="speedLabel">0.15x</span></div><div class="pm-btns"><button class="pm-btn pm-btn-anim" id="animPlayBtn" onclick="animToggle()">▶ Stroke</button><button class="pm-btn pm-btn-audio" onclick="playChar()">▶ Audio</button><button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button><button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button><button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button></div></div></div><div class="print-sheet" id="printSheet" style="display:none"></div>
+<div class="fc-overlay" id="fcOverlay" onclick="if(event.target===this)closeFlashcard()"><div class="fc-box"><h3 style="color:#1A56DB;margin-bottom:4px">🃏 Flashcards</h3><div class="fc-card-wrap"><div class="fc-card" id="fcCard" onclick="flipCard()"><div class="fc-front"><div class="fc-zh" id="fcZh"></div><div class="fc-hint">Click to flip</div></div><div class="fc-back"><div class="fc-py" id="fcPy"></div><div class="fc-en" id="fcEn"></div></div></div></div><div class="fc-actions"><button onclick="flipCard()">Space</button><button onclick="prevCard()">←</button><button onclick="nextCard()">→</button><button onclick="shuffleCards()">🔀</button><button class="fc-primary" onclick="playCard()">▶</button><button onclick="closeFlashcard()">✕</button></div><div class="fc-counter" id="fcCounter"></div></div></div>
+<audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+
+var SPEED_RATE = 1.0;
+function setSpeed(r) {
+  SPEED_RATE = r;
+  var btns = document.querySelectorAll('.speed-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', parseFloat(btns[i].textContent) === r);
+  }
+}
+
+['橙子','汁','介绍','高兴','认识','高','多','少','饭','早上','上午','中午','晚上','早饭','午饭','晚饭','公园','早','晚','我来说。','你来说。','我来买。','我来说一下。','你来看一下。','听一下。','吃一下。','你快来一下。','你多高？','一米八。','你多大？','你比我高。','我比你大。','早上好。','上午好。','中午好。','下午好。','晚上好。','你好，我很高兴认识你。','我叫卡斯珀，我姓Wherry。','我在澳大利亚，我今年二十三岁。','我喜欢吃饺子，喝橙汁。','我早上在公园跑步。','你吃早饭了吗？','吃了，你呢？','我没吃。','你吃早饭吗？','我吃早饭。','你中午吃了什么？','我中午吃了面条。'];
+document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
+
+// Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
+var hz = false;
+function cv() {
+  var v = window.speechSynthesis.getVoices();
+  hz = v.some(function(x) { return x.lang.startsWith('zh'); });
+}
+cv();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = cv;
+}
+
+function play(i) {
+  var text = typeof i === "number" ? texts[i] : i;
+  try {
+    // ① Try Edge TTS local server first (1s timeout, cached after first play)
+    var ctrl = new AbortController();
+    var t1 = setTimeout(function() { ctrl.abort(); speechOrGoogle(text); }, 1000);
+    fetch('http://localhost:8765/tts?text=' + encodeURIComponent(text), {signal: ctrl.signal})
+      .then(function(resp) {
+        clearTimeout(t1);
+        if (!resp.ok) throw new Error('tts');
+        return resp.blob();
+      })
+      .then(function(blob) {
+        var p = document.getElementById('player');
+        p.src = URL.createObjectURL(blob);
+        p.playbackRate = SPEED_RATE;
+        p.play();
+      })
+      .catch(function() {
+        clearTimeout(t1);
+        speechOrGoogle(text);
+      });
+  } catch(e) {
+    // AbortController not supported → skip Edge TTS
+    speechOrGoogle(text);
+  }
+}
+
+function speechOrGoogle(text) {
+  // ② Web Speech API → ③ Google Translate TTS
+  if (hz) {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = SPEED_RATE;
+    var voices = speechSynthesis.getVoices();
+    var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
+    if (zhVoice) u.voice = zhVoice;
+    var fb = setTimeout(function() {
+      try { speechSynthesis.cancel(); } catch(e) {}
+      googleTTS(text);
+    }, 2500);
+    u.onstart = function() { clearTimeout(fb); };
+    u.onerror = function() {
+      clearTimeout(fb);
+      googleTTS(text);
+    };
+    try { speechSynthesis.cancel(); } catch(e) {}
+    try { speechSynthesis.speak(u); } catch(e) {
+      googleTTS(text);
+    }
+  } else {
+    googleTTS(text);
+  }
+}
+
+function googleTTS(text) {
+  var p = document.getElementById('player');
+  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  p.playbackRate = SPEED_RATE;
+  p.play();
+}
+
+function playAll() {
+  let i = 0;
+  function n() {
+    if (i >= texts.length) return;
+    play(i);
+    i++;
+    setTimeout(n, 1300);
+  }
+  n();
+}
+
+
+/* ---- Hanzi Practice ---- */var PINYIN_RE=/[aāáǎà]i|[aāáǎà]ng?|[aāáǎà]o?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[aāáǎà][io]?|[bpmf]?[oōóǒò]u?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]i?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[iīíǐì][aāáǎàoōóǒòeēéěèuūúǔù]?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[oōóǒò]ng|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[uūúǔù][aāáǎàoōóǒòeēéěèiīíǐì]?n?g?|[nlgkhjqxzcsry]?[üǖǘǚǜ][eēéěè]?n?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]r|[eēéěè]r/g;
+var STROKE_DATA={"上":{"medians":[[[446, 781], [462, 775], [498, 734], [493, 159], [472, 136]], [[531, 448], [551, 462], [627, 473], [698, 493], [768, 496]], [[134, 92], [171, 76], [212, 72], [458, 103], [841, 132], [932, 99]]],"bounds":{"minX": 134, "maxX": 932, "minY": 72, "maxY": 781}},"中":{"medians":[[[194, 598], [229, 572], [236, 553], [295, 323]], [[262, 591], [281, 579], [471, 611], [719, 641], [741, 638], [777, 596], [732, 460], [702, 446]], [[316, 350], [330, 365], [689, 409], [749, 405], [768, 398]], [[449, 823], [476, 817], [513, 781], [505, 656], [499, -10]]],"bounds":{"minX": 194, "maxX": 777, "minY": -10, "maxY": 823}},"介":{"medians":[[[458, 813], [481, 790], [491, 767], [446, 675], [398, 602], [275, 457], [152, 355], [84, 314]], [[515, 713], [515, 699], [522, 690], [616, 588], [718, 487], [780, 438], [856, 421], [982, 406]], [[333, 418], [358, 401], [373, 379], [360, 260], [335, 180], [298, 122], [261, 82], [182, 30]], [[554, 480], [590, 436], [591, 424], [595, 228], [586, -11], [589, -70]]],"bounds":{"minX": 84, "maxX": 982, "minY": -70, "maxY": 813}},"公":{"medians":[[[314, 654], [347, 614], [296, 512], [215, 404], [128, 322], [68, 282]], [[473, 790], [518, 770], [544, 742], [671, 540], [756, 445], [783, 424], [803, 418], [874, 400], [982, 383]], [[423, 420], [446, 395], [457, 378], [455, 372], [389, 250], [316, 147], [303, 108], [347, 103], [439, 127], [608, 159], [639, 151]], [[582, 276], [662, 191], [706, 132], [724, 81], [723, 57]]],"bounds":{"minX": 68, "maxX": 982, "minY": 57, "maxY": 790}},"兴":{"medians":[[[213, 623], [315, 551], [342, 506]], [[388, 729], [399, 715], [490, 647], [511, 604]], [[681, 752], [698, 738], [716, 700], [625, 513], [579, 437], [557, 417]], [[95, 361], [121, 349], [170, 343], [451, 382], [819, 415], [890, 406], [933, 390], [942, 377]], [[420, 246], [383, 240], [347, 185], [282, 116], [217, 65], [183, 47]], [[584, 297], [757, 136], [786, 97], [805, 45]]],"bounds":{"minX": 95, "maxX": 942, "minY": 45, "maxY": 752}},"午":{"medians":[[[385, 811], [416, 768], [382, 683], [304, 571], [240, 516]], [[386, 630], [469, 635], [697, 680], [735, 677]], [[112, 362], [171, 351], [395, 384], [838, 424], [878, 421], [942, 400]], [[489, 609], [533, 578], [535, 551], [527, -36]]],"bounds":{"minX": 112, "maxX": 942, "minY": -36, "maxY": 811}},"园":{"medians":[[[216, 735], [246, 703], [254, 673], [255, 631], [239, 248], [217, 88], [220, 20]], [[279, 714], [298, 700], [437, 725], [720, 761], [759, 750], [789, 719], [790, 484], [809, 159], [808, 105], [797, 52], [804, -9]], [[396, 570], [463, 567], [556, 593], [611, 595]], [[307, 430], [369, 425], [605, 473], [665, 477], [687, 472]], [[414, 405], [437, 388], [406, 301], [359, 238], [306, 198]], [[518, 425], [540, 411], [535, 306], [543, 256], [553, 237], [577, 224], [635, 217], [674, 229], [696, 248], [687, 362]], [[248, 43], [273, 59], [393, 70], [693, 92], [759, 83]]],"bounds":{"minX": 216, "maxX": 809, "minY": -9, "maxY": 761}},"多":{"medians":[[[476, 838], [494, 796], [452, 737], [366, 655], [336, 634], [262, 599]], [[484, 726], [630, 734], [666, 717], [645, 678], [606, 630], [494, 520], [354, 421], [250, 370]], [[358, 625], [407, 597], [421, 583], [432, 557]], [[596, 478], [567, 472], [505, 397], [398, 306], [331, 264], [295, 249]], [[531, 383], [672, 411], [722, 402], [734, 384], [682, 294], [619, 204], [510, 93], [428, 34], [338, -13], [270, -39], [190, -54]], [[382, 273], [402, 266], [460, 220], [486, 178]]],"bounds":{"minX": 190, "maxX": 734, "minY": -54, "maxY": 838}},"子":{"medians":[[[294, 711], [355, 686], [462, 717], [620, 752], [658, 752], [675, 732], [681, 708], [549, 578], [536, 574]], [[472, 588], [516, 549], [530, 478], [550, 263], [549, 179], [537, 99], [523, 64], [505, 42], [490, 34], [383, 79], [368, 91], [353, 93]], [[119, 405], [142, 394], [186, 386], [410, 420], [826, 459], [855, 457], [916, 439], [937, 422]]],"bounds":{"minX": 119, "maxX": 937, "minY": 34, "maxY": 752}},"少":{"medians":[[[470, 791], [489, 781], [518, 745], [505, 478], [509, 346]], [[305, 582], [287, 502], [227, 374]], [[698, 608], [798, 540], [821, 514], [841, 466]], [[662, 471], [678, 436], [679, 417], [605, 284], [513, 172], [439, 107], [375, 64], [270, 8], [179, -27]]],"bounds":{"minX": 179, "maxX": 841, "minY": -27, "maxY": 791}},"早":{"medians":[[[291, 757], [327, 730], [342, 704], [373, 555], [397, 487]], [[347, 747], [380, 739], [478, 759], [610, 775], [662, 773], [677, 764], [702, 731], [676, 668], [631, 511]], [[394, 610], [403, 620], [490, 639], [558, 649], [579, 643]], [[418, 500], [427, 509], [588, 532], [609, 542]], [[103, 336], [167, 317], [412, 351], [839, 388], [868, 384], [926, 361]], [[462, 497], [505, 467], [509, 457], [503, -26]]],"bounds":{"minX": 103, "maxX": 926, "minY": -26, "maxY": 775}},"晚":{"medians":[[[105, 664], [131, 634], [139, 577], [138, 371], [123, 197], [128, 141]], [[163, 645], [194, 646], [264, 671], [304, 649], [304, 253], [294, 184], [296, 139]], [[164, 412], [183, 429], [218, 438], [249, 435]], [[157, 174], [162, 184], [181, 195], [262, 215]], [[542, 818], [564, 783], [544, 739], [484, 660], [391, 572]], [[529, 677], [645, 700], [680, 687], [631, 602], [569, 523]], [[368, 503], [393, 480], [399, 462], [429, 295]], [[425, 494], [437, 486], [548, 503], [700, 539], [739, 538], [770, 505], [729, 407], [704, 398]], [[448, 316], [465, 329], [701, 365], [737, 364], [762, 355]], [[537, 484], [571, 457], [547, 318], [512, 215], [438, 110], [373, 56], [296, 16]], [[592, 299], [619, 263], [609, 141], [615, 74], [639, 41], [682, 20], [739, 9], [804, 10], [867, 24], [909, 47], [920, 59], [916, 211]]],"bounds":{"minX": 105, "maxX": 920, "minY": 9, "maxY": 818}},"橙":{"medians":[[[100, 510], [148, 506], [309, 547], [355, 547]], [[225, 801], [265, 762], [275, 739], [260, 389], [259, 222], [243, 54], [245, -19]], [[241, 497], [223, 411], [200, 361], [141, 259], [59, 153]], [[287, 354], [301, 336], [338, 317], [358, 287]], [[414, 664], [452, 666], [508, 679], [529, 677], [542, 661], [505, 559], [451, 474], [405, 421], [346, 377]], [[382, 585], [419, 567], [447, 544]], [[733, 744], [703, 750], [662, 702], [648, 695], [648, 689]], [[842, 669], [811, 679], [755, 630], [724, 611], [725, 605]], [[596, 686], [629, 673], [759, 518], [852, 433], [985, 414]], [[491, 453], [515, 448], [552, 451], [632, 476], [685, 479]], [[436, 348], [463, 326], [470, 311], [500, 194]], [[492, 343], [503, 335], [663, 371], [684, 368], [713, 338], [689, 288], [662, 271]], [[516, 216], [525, 224], [651, 247], [719, 243]], [[454, 158], [513, 106], [523, 76]], [[662, 198], [679, 163], [635, 76], [617, 70]], [[346, 16], [400, 8], [528, 27], [791, 53], [827, 50], [871, 36]]],"bounds":{"minX": 59, "maxX": 985, "minY": -19, "maxY": 801}},"汁":{"medians":[[[247, 778], [337, 721], [356, 688]], [[137, 594], [228, 527], [243, 504]], [[217, 93], [202, 130], [198, 177], [321, 455]], [[369, 489], [403, 483], [446, 487], [581, 515], [824, 553], [877, 548], [916, 537]], [[573, 807], [600, 801], [637, 765], [626, 481], [623, 2]]],"bounds":{"minX": 137, "maxX": 916, "minY": 2, "maxY": 807}},"绍":{"medians":[[[297, 786], [318, 759], [325, 739], [322, 731], [264, 624], [183, 494], [177, 471], [197, 466], [302, 470], [325, 482]], [[405, 621], [424, 585], [347, 471], [249, 354], [240, 313], [277, 311], [398, 349]], [[133, 117], [191, 110], [432, 237]], [[510, 647], [569, 640], [798, 688], [827, 668], [811, 536], [790, 461], [770, 420], [739, 390], [703, 404], [660, 431]], [[612, 622], [633, 607], [636, 597], [607, 522], [541, 417], [494, 361], [447, 318]], [[486, 273], [519, 242], [556, 32]], [[551, 265], [566, 254], [748, 295], [781, 287], [808, 258], [775, 155], [747, 134]], [[579, 65], [593, 80], [736, 105], [795, 107], [820, 99]]],"bounds":{"minX": 133, "maxX": 827, "minY": 32, "maxY": 786}},"认":{"medians":[[[253, 779], [339, 730], [373, 684]], [[39, 450], [78, 443], [117, 448], [251, 498], [286, 496], [295, 480], [254, 182], [260, 132], [312, 148], [412, 223]], [[576, 745], [624, 702], [628, 677], [612, 442], [593, 322], [575, 254], [535, 166], [481, 99], [425, 59], [331, 19]], [[631, 371], [639, 333], [677, 263], [755, 140], [799, 86], [829, 61], [974, 11]]],"bounds":{"minX": 39, "maxX": 974, "minY": 11, "maxY": 779}},"识":{"medians":[[[278, 799], [372, 750], [402, 710]], [[69, 474], [106, 466], [126, 470], [278, 528], [313, 527], [323, 518], [289, 206], [296, 171], [318, 174], [347, 188], [444, 275]], [[476, 628], [504, 603], [513, 578], [552, 343]], [[540, 597], [558, 612], [632, 622], [741, 648], [776, 640], [805, 609], [803, 597], [765, 466], [737, 445]], [[573, 376], [589, 391], [710, 413], [786, 419], [810, 410]], [[612, 245], [577, 238], [541, 186], [486, 127], [439, 85], [383, 50]], [[722, 277], [816, 193], [850, 155], [873, 114], [882, 76]]],"bounds":{"minX": 69, "maxX": 882, "minY": 50, "maxY": 799}},"饭":{"medians":[[[271, 799], [288, 786], [311, 753], [256, 627], [155, 457], [91, 371], [50, 331]], [[255, 567], [367, 596], [396, 597], [419, 588], [371, 495], [337, 450]], [[234, 455], [256, 433], [270, 404], [269, 285], [253, 165], [258, 130], [297, 139], [405, 208]], [[826, 708], [809, 714], [756, 714], [718, 683], [631, 632], [599, 619], [591, 624]], [[518, 628], [555, 596], [558, 586], [553, 439], [527, 295], [502, 224], [464, 156], [399, 86], [346, 52]], [[577, 409], [670, 425], [733, 450], [756, 451], [797, 440], [759, 298], [726, 226], [693, 177], [600, 101], [536, 76], [509, 73]], [[586, 305], [620, 293], [730, 164], [844, 60], [977, 41]]],"bounds":{"minX": 50, "maxX": 977, "minY": 41, "maxY": 799}},"高":{"medians":[[[435, 851], [506, 813], [536, 782]], [[218, 672], [265, 664], [449, 695], [736, 725], [775, 720], [812, 707]], [[354, 598], [387, 563], [412, 446]], [[382, 603], [416, 597], [562, 630], [588, 628], [619, 601], [598, 542], [573, 523]], [[432, 464], [447, 476], [548, 495], [609, 500], [631, 492]], [[192, 360], [228, 325], [235, 276], [235, 190], [219, 81], [221, 22]], [[255, 352], [274, 341], [529, 382], [770, 403], [799, 397], [829, 370], [825, 157], [807, 55], [794, 31], [776, 15], [683, 49], [660, 63]], [[352, 270], [377, 250], [384, 235], [416, 103]], [[403, 271], [412, 262], [431, 261], [576, 292], [598, 289], [628, 259], [606, 198], [617, 181]], [[433, 128], [443, 140], [573, 158], [629, 148]]],"bounds":{"minX": 192, "maxX": 829, "minY": 15, "maxY": 851}}};
+var RADICAL_DATA={"上":{"radical":"上","radicalName":"上","radicalNamePy":"shàng","meaning":"up/above","desc":"Up, above, on top; to go up"},"中":{"radical":"中","radicalName":"中","radicalNamePy":"zhōng","meaning":"middle/center","desc":"Middle, center; China"},"公":{"radical":"八","radicalName":"八字旁","radicalNamePy":"bā zì páng","meaning":"eight","desc":"eight — divided, separate"},"兴":{"radical":"八","radicalName":"八字旁","radicalNamePy":"bā zì páng","meaning":"eight","desc":"eight — divided, separate"},"午":{"radical":"十","radicalName":"十字旁","radicalNamePy":"shí zì páng","meaning":"ten","desc":"ten — completeness, many"},"园":{"radical":"囗","radicalName":"大口框","radicalNamePy":"dà kǒu kuāng","meaning":"enclosure","desc":"enclosure — surround on all sides"},"多":{"radical":"夕","radicalName":"夕字旁","radicalNamePy":"xī zì páng","meaning":"evening","desc":"evening/night — dusk, end of day"},"子":{"radical":"子","radicalName":"子字旁","radicalNamePy":"zi zì páng","meaning":"child","desc":"child — offspring, young"},"少":{"radical":"小","radicalName":"小字头","radicalNamePy":"xiǎo zì tóu","meaning":"small","desc":"small/little — diminutive"},"早":{"radical":"日","radicalName":"日字旁","radicalNamePy":"rì zì páng","meaning":"sun","desc":"sun/day — time/light-related"},"晚":{"radical":"日","radicalName":"日字旁","radicalNamePy":"rì zì páng","meaning":"sun","desc":"sun/day — time/light-related"},"橙":{"radical":"木","radicalName":"木字旁","radicalNamePy":"mù","meaning":"tree","desc":"tree/wood — plant/fruit-related"},"汁":{"radical":"水","radicalName":"三点水","radicalNamePy":"shuǐ","meaning":"water","desc":"water — liquid/flow-related"},"认":{"radical":"讠","radicalName":"言字旁","radicalNamePy":"yán zì páng","meaning":"speech","desc":"speech — language/communication"},"识":{"radical":"讠","radicalName":"言字旁","radicalNamePy":"yán","meaning":"speech","desc":"speech — language/communication"},"饭":{"radical":"饣","radicalName":"食字旁","radicalNamePy":"shí zì páng","meaning":"food","desc":"food/eat — meal/cuisine-related"},"高":{"radical":"高","radicalName":"高字旁","radicalNamePy":"gāo zì páng","meaning":"tall","desc":"tall/high — elevation, exalted"}};
+var pChars=[],CHAR_PINYIN={},curIdx=0,pmCtx=null,drawing=false,animCtx=null,animTimer=null,animStk=0,animPt=0,animSpeedMult=0.15,animLoop=false,strokeData=null;
+(function(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var btns=r.querySelectorAll('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');
+    if(!btns.length||!zh)return;
+    var word=zh.textContent.trim();
+    for(var i=0;i<word.length;i++){
+      var ch=word[i];
+      if(!/[\u4e00-\u9fff]/.test(ch))continue;
+      if(!seen[ch]){seen[ch]=true;pChars.push(ch);}
+    }
+    if(py){
+      var text=py.textContent.trim();
+      PINYIN_RE.lastIndex=0;var syls=[],m;
+      while((m=PINYIN_RE.exec(text))!==null)syls.push(m[0]);
+      if(!syls.length)syls=text.split(/\s+/);
+      var ci=0;
+      for(var j=0;j<word.length;j++){
+        var c=word[j];
+        if(/[\u4e00-\u9fff]/.test(c)){
+          if(ci<syls.length)CHAR_PINYIN[c]=syls[ci];
+          ci++;
+        }
+      }
+    }
+  });
+})();
+function initCanvas(){
+  var c=document.getElementById('pmCanvas');
+  var g=document.querySelector('.pm-grid');
+  c.width=g.offsetWidth;c.height=g.offsetHeight;
+  pmCtx=c.getContext('2d');pmCtx.strokeStyle='#c00';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';
+  c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingClientRect();pmCtx.moveTo(e.clientX-r.left,e.clientY-r.top)};
+  c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
+  c.onpointerup=c.onpointerleave=function(){drawing=false};
+  // Init animation canvas
+  var ac=document.getElementById('animCanvas');
+  ac.width=g.offsetWidth;ac.height=g.offsetHeight;
+  animCtx=ac.getContext('2d');animCtx.strokeStyle='#ccc';animCtx.lineWidth=5;animCtx.lineCap='round';animCtx.lineJoin='round';
+  // Speed slider
+  var slider=document.getElementById('animSpeed');
+  slider.oninput=function(){animSpeedMult=this.value/100;document.getElementById('speedLabel').textContent=animSpeedMult.toFixed(2)+'x'};
+}
+function openPractice(t){
+  var chars=t.split('').filter(function(c){return/[\u4e00-\u9fff]/.test(c)});
+  for(var i=0;i<pChars.length;i++){if(pChars[i]===chars[0]){curIdx=i;break}}
+  document.getElementById('pm')._wordChars=chars;
+  document.getElementById('pm').classList.add('open');
+  setTimeout(function(){initCanvas();showChar();renderNav()},100);
+}
+function closePractice(){animPause();document.getElementById('pm').classList.remove('open')}
+function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
+function showChar(){
+  var ch=pChars[curIdx];
+  document.getElementById('pmTitle').textContent=ch;
+  document.getElementById('pmPinyin').textContent=CHAR_PINYIN[ch]||'';
+  document.getElementById('pmHint').textContent='Trace the character in the grid';
+  var radInfo=typeof RADICAL_DATA!=='undefined'?RADICAL_DATA[ch]:null;
+  var radEl=document.getElementById('pmRadical');
+  if(radInfo){radEl.innerHTML='<span style="font-size:16px">'+radInfo.radical+'</span> '+radInfo.radicalName+' '+radInfo.radicalNamePy+' &mdash; '+radInfo.desc}
+  else{radEl.textContent=''}
+  loadStroke(ch);clearCanvas();clearAnimCanvas();
+  // Draw completed strokes as gray reference
+  if(strokeData)for(var s=0;s<strokeData.medians.length;s++)drawStroke(s,1);
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function playChar(){if(pChars[curIdx]&&typeof play!=='undefined')play(pChars[curIdx])}
+function loadChar(i){curIdx=i;showChar();renderNav()}
+function renderNav(){
+  var nav=document.getElementById('pmNav'),h='';
+  var wordChars=document.getElementById('pm')._wordChars||[];
+  for(var i=0;i<pChars.length;i++){var cls='pm-nav-btn';if(i===curIdx)cls+=' active';h+='<button class="'+cls+'" onclick="loadChar('+i+')" style="'+(wordChars.indexOf(pChars[i])>=0?'border-color:#E65100;font-weight:bold':'')+'">'+pChars[i]+'</button>'}
+  nav.innerHTML=h;
+}
+
+
+/* ---- Stroke Animation ---- */
+function loadStroke(ch){
+  animPause();
+  if(typeof STROKE_DATA==='undefined'||!STROKE_DATA[ch]){strokeData=null;return}
+  var sd=STROKE_DATA[ch];strokeData={medians:sd.medians,bounds:sd.bounds};
+  animStk=0;animPt=0;
+  clearAnimCanvas();
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function clearAnimCanvas(){if(animCtx){var c=document.getElementById('animCanvas');animCtx.clearRect(0,0,c.width,c.height)}}
+function animToggle(){
+  if(animTimer){animPause();return}
+  if(!strokeData||animStk>=strokeData.medians.length){animStk=0;animPt=0;clearAnimCanvas()}
+  if(animStk===0&&animPt===0){document.getElementById('animPlayBtn').textContent='\u23f8';animPlay()}
+}
+function animPlay(){
+  if(!strokeData||animStk>=strokeData.medians.length){if(animLoop){animStk=0;animPt=0;clearAnimCanvas();document.getElementById('animPlayBtn').textContent='\u23f8'}else{animPause();return}}
+  var med=strokeData.medians[animStk];
+  animTimer=setTimeout(function(){
+    animPt++;
+    animDrawCurrentState();
+    if(animPt<med.length){animPlay()}
+    else{animStk++;animPt=0;if(animStk<strokeData.medians.length){clearAnimCanvas();for(var s=0;s<animStk;s++)drawStroke(s,1)}animPlay()}
+  },40/animSpeedMult);
+}
+function animDrawCurrentState(){
+  if(!strokeData||animStk>=strokeData.medians.length)return;
+  var med=strokeData.medians[animStk];
+  if(!med||animPt<=0)return;
+  for(var s=0;s<animStk;s++)drawStroke(s,1);
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<animPt;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function drawStroke(s,full){
+  if(!strokeData)return;
+  var med=strokeData.medians[s];if(!med)return;
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<med.length;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function animPause(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null}
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+
+
+/* ---- Flashcard ---- */
+var fcData=[],fcOrder=[],fcIdx=0;
+function initFlashcardData(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var b=r.querySelector('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');var en=r.querySelector('.en');
+    if(!b||!zh)return;
+    var text=zh.textContent.trim().replace(/^\w+:?\s*/,'');
+    fcData.push({zh:text,py:py?py.textContent.trim():'',en:en?en.textContent.trim():''});
+  });
+}
+function shuffleCards(){for(var i=fcOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=fcOrder[i];fcOrder[i]=fcOrder[j];fcOrder[j]=t;}fcIdx=0;showCard();}
+function openFlashcard(){
+  if(!fcOrder.length){fcOrder=[];for(var i=0;i<fcData.length;i++)fcOrder.push(i);}
+  shuffleCards();document.getElementById('fcOverlay').classList.add('show');
+}
+function closeFlashcard(){document.getElementById('fcOverlay').classList.remove('show');}
+function showCard(){
+  if(!fcOrder.length)return;
+  var d=fcData[fcOrder[fcIdx]];
+  document.getElementById('fcZh').textContent=d.zh;
+  document.getElementById('fcPy').textContent=d.py;
+  document.getElementById('fcEn').textContent=d.en;
+  document.getElementById('fcCard').classList.remove('flipped');
+  document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcOrder.length;
+}
+function flipCard(){document.getElementById('fcCard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcOrder.length;showCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcOrder.length)%fcOrder.length;showCard();}
+function playCard(){
+  var d=fcData[fcOrder[fcIdx]];
+  if(typeof play==='function')play(d.zh);
+}
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('fcOverlay').classList.contains('show'))return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard();}
+  else if(e.key==='ArrowRight')nextCard();
+  else if(e.key==='ArrowLeft')prevCard();
+  else if(e.key==='r')shuffleCards();
+  else if(e.key==='Esc')closeFlashcard();
+});
+initFlashcardData();
+</script>
+</body>
+</html>
