@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- v7.55b: 页面级 no-referrer（GitHub Pages https→https 跨域会发 origin referrer → Google TTS 404 → 回退 Web Speech；
+     本地 http 预览因协议降级天然无 referrer 所以正常——audio 元素 referrerpolicy 属性实测不可靠，必须页面级强制） -->
+<meta name="referrer" content="no-referrer">
 <title>Alina F - 260815</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -452,6 +455,9 @@ function googleTTS(text) {
   var t = setTimeout(function() { p.onerror = null; speechOrGoogle(text); }, 8000);
   p.onerror = function() { clearTimeout(t); p.onerror = null; speechOrGoogle(text); };
   p.onplaying = function() { clearTimeout(t); p.onerror = null; };
+  // v7.55b: JS 双保险——meta no-referrer 被忽略时，audio 元素级 referrerPolicy 也强制无 referrer
+  // （GitHub Pages https→https 跨域默认 strict-origin-when-cross-origin 发 origin → Google TTS 404）
+  p.referrerPolicy = 'no-referrer';
   p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
   p.playbackRate = SPEED_RATE;
   p.play();
