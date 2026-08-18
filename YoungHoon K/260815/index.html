@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<meta name="referrer" content="no-referrer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YoungHoon K - 260815</title>
@@ -688,7 +689,7 @@ function play(i) {
 
 function speechOrGoogle(text) {
   // ③ Web Speech API（最后兜底；v7.52q 不再回调 googleTTS，防互调死循环）
-  if (!hz) return;
+  if (!hz) { showTtsMsg('⚠ 此设备没有中文语音包，无法播放。请用 Chrome/Edge 或检查系统语音设置'); return; }
   var u = new SpeechSynthesisUtterance(text);
   u.lang = 'zh-CN';
   u.rate = 0.9 * SPEED_RATE;
@@ -699,22 +700,38 @@ function speechOrGoogle(text) {
     try { speechSynthesis.cancel(); } catch(e) {}
   }, 2500);
   u.onstart = function() { clearTimeout(fb); };
-  u.onerror = function() { clearTimeout(fb); };
+  u.onerror = function() { clearTimeout(fb); showTtsMsg('⚠ 语音播放失败，请检查网络后重试'); };
   try { speechSynthesis.cancel(); } catch(e) {}
-  try { speechSynthesis.speak(u); } catch(e) {}
+  try { speechSynthesis.speak(u); } catch(e) { showTtsMsg('⚠ 语音播放失败，请检查网络后重试'); }
 }
 
 function googleTTS(text) {
   var p = document.getElementById('player');
   // Google TTS 单次请求 ~200 字符上限；超长（阅读段落）直接走 Web Speech
   if (text.length > 180) { speechOrGoogle(text); return; }
-  var t = setTimeout(function() { p.onerror = null; speechOrGoogle(text); }, 3000);
+  var t = setTimeout(function() { p.onerror = null; speechOrGoogle(text); }, 8000);
   p.onerror = function() { clearTimeout(t); p.onerror = null; speechOrGoogle(text); };
   p.onplaying = function() { clearTimeout(t); p.onerror = null; };
+  p.referrerPolicy = 'no-referrer';
   p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
   p.playbackRate = SPEED_RATE;
   p.play();
 }
+
+function showTtsMsg(msg) {
+  var el = document.getElementById('tts-msg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'tts-msg';
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#B26A00;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(showTtsMsg._t);
+  showTtsMsg._t = setTimeout(function() { el.style.display = 'none'; }, 4000);
+}
+
 
 function playAll() {
   let i = 0;
