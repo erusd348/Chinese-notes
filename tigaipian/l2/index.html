@@ -4,6 +4,9 @@
 <meta name="referrer" content="no-referrer">
 <title>第2课 说起来容易，做起来难</title>
 <style>
+.pm-current-word{font-size:11px;color:#E65100;margin-bottom:4px;font-weight:bold}
+.pm-hint{font-size:11px;color:#999;margin-bottom:6px;min-height:15px}
+.fc-btn{padding:6px 12px;border:1px solid #E65100;border-radius:5px;font-size:12px;cursor:pointer;background:#FFF3E0;color:#E65100}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
 .container{max-width:720px;margin:0 auto}
@@ -247,23 +250,19 @@ body.hide-py .ex-py{display:none!important}
 <div class="pm-title-row"><span class="pm-title" id="pmTitle"></span><span class="pm-pinyin" id="pmPinyin"></span></div>
 <div class="pm-hint" id="pmHint">Trace the character in the grid</div>
 <div class="pm-grid">
-<canvas id="animCanvas" width="260" height="260"></canvas>
+<canvas class="anim-canvas" id="animCanvas" width="260" height="260"></canvas>
 <canvas class="pm-canvas" id="pmCanvas"></canvas>
 </div>
-<div class="anim-bar">
-<button class="ani-btn" onclick="animPlay()">&#9654;</button>
-<button class="ani-btn" onclick="animPause()">&#9208;</button>
-<button class="ani-btn" onclick="animReset()">&#8634;</button>
-<button class="ani-btn" onclick="animLoop()">&#128260;</button>
-<span id="amSpd" style="font-size:10px;color:#999">0.15x</span>
-<div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
-</div>
+<div class="pm-speed"><span>Speed:</span><input type="range" id="animSpeed" min="5" max="300" value="15"><span id="speedLabel">0.15x</span></div>
 <div class="pm-btns">
+<button class="pm-btn pm-btn-anim" id="animPlayBtn" onclick="animToggle()">&#9654; Stroke</button>
 <button class="pm-btn pm-btn-audio" onclick="playChar()">&#9654; Audio</button>
 <button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button>
 <button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button>
-</div>
+
+<button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button></div>
 </div></div>
+<div class="print-sheet" id="printSheet" style="display:none"></div>
 </div>
 
 
@@ -455,6 +454,9 @@ var pChars=[],CHAR_PINYIN={},curIdx=0,pmCtx=null,drawing=false,animCtx=null,anim
     }
   });
 })();
+/* ---- PINYIN_FIX: 预计算单字拼音（保留教材读音，修正 PINYIN_RE 切分缺陷）---- */
+CHAR_PINYIN=Object.assign(CHAR_PINYIN||{},{"万":"wàn","三":"sān","两":"liǎng","临":"lín","人":"rén","代":"dài","伤":"shāng","住":"zhù","作":"zuò","副":"fù","千":"qiān","参":"shēn","发":"fā","古":"gǔ","在":"zài","坚":"jiān","壮":"zhuàng","复":"fù","天":"tiān","实":"shí","强":"qiáng","怕":"pà","恐":"kǒng","恢":"huī","打":"dǎ","折":"zhé","持":"chí","摔":"shuāi","效":"xiào","时":"shí","晒":"shài","止":"zhǐ","毛":"máo","治":"zhì","流":"liú","炎":"yán","片":"piàn","犯":"fàn","用":"yòng","疼":"téng","病":"bìng","皮":"pí","秘":"mì","网":"wǎng","肉":"ròu","肤":"fū","脸":"liǎn","色":"sè","药":"yào","血":"xiě","补":"bǔ","见":"jiàn","诀":"jué","途":"tú","院":"yuàn","骨":"gǔ","鱼":"yú"});
+
 function initCanvas(){
   var c=document.getElementById('pmCanvas');
   var g=document.querySelector('.pm-grid');
@@ -679,5 +681,53 @@ function showVocab(e){
 document.addEventListener('click',function(){if(vwTip)vwTip.classList.remove('show')});
 
 function togglePinyin(){var hide = document.body.classList.toggle('hide-py'); var btn = document.getElementById('pyToggle'); btn.innerHTML = hide ? '👁 Show Pinyin' : '👁 Hide Pinyin'; try{localStorage.setItem('hidePy', hide ? '1' : '0')}catch(e){}}
+
+/* ---- Print Sheet: 生成本课全部练习字的田字格打印页 ---- */
+function printSheet(){
+  var box=document.getElementById('printSheet');
+  if(!box)return;
+  var chars=(typeof pChars!=='undefined'&&pChars&&pChars.length)?pChars.slice():[];
+  if(!chars.length){if(typeof alert==='function')alert('No characters to print');return}
+  box.innerHTML='';
+  var h1=document.createElement('div');
+  h1.style.cssText='font-size:15px;font-weight:bold;margin:0 0 8px;color:#333;font-family:sans-serif';
+  h1.textContent=(document.title||'Character Practice')+' \u2014 \u6c49\u5b57\u7ec3\u4e60';
+  box.appendChild(h1);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;flex-wrap:wrap';
+  box.appendChild(wrap);
+  for(var i=0;i<chars.length;i++){(function(ch){
+    var g=document.createElement('div');g.className='pm-grid';
+    var c=document.createElement('canvas');c.width=110;c.height=110;
+    g.appendChild(c);wrap.appendChild(g);
+    var ctx=(c.getContext?c.getContext('2d'):null);
+    if(!ctx)return;
+    var sd=(typeof STROKE_DATA!=='undefined'&&STROKE_DATA[ch])?STROKE_DATA[ch]:null;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=2;
+    if(sd&&sd.medians){
+      ctx.strokeStyle='#bbb';
+      var b=sd.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+      var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+      var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+      for(var s=0;s<sd.medians.length;s++){
+        var med=sd.medians[s];if(!med||!med.length)continue;
+        ctx.beginPath();
+        for(var p=0;p<med.length;p++){
+          var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+          if(p===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+      }
+    }else{
+      ctx.fillStyle='#bbb';ctx.font='70px KaiTi,STKaiti,\u6977\u4f53,serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(ch,c.width/2,c.height/2);
+    }
+  })(chars[i]);}
+  box.style.display='block';
+  if(typeof window.print==='function'){try{window.print()}catch(e){}}
+  setTimeout(function(){box.style.display='none'},1500);
+}
+
 </script>
 </body></html>

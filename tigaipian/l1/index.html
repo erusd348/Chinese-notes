@@ -6,6 +6,12 @@
 <meta name="referrer" content="no-referrer">
 <title>第1课 — 认识新朋友</title>
 <style>
+.pm-canvas{position:absolute;inset:0;z-index:3;cursor:crosshair;touch-action:none}
+.pm-btn-anim{background:#43A047;color:#fff}.pm-btn-anim:hover{background:#2E7D32}
+.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}
+.fc-btn{padding:6px 12px;border:1px solid #E65100;border-radius:5px;font-size:12px;cursor:pointer;background:#FFF3E0;color:#E65100}
+.print-sheet{display:none}
+@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
 .container{max-width:720px;margin:0 auto}
@@ -416,6 +422,9 @@ var pChars=[],CHAR_PINYIN={},curIdx=0,pmCtx=null,drawing=false,animCtx=null,anim
     }
   });
 })();
+/* ---- PINYIN_FIX: 预计算单字拼音（保留教材读音，修正 PINYIN_RE 切分缺陷）---- */
+CHAR_PINYIN=Object.assign(CHAR_PINYIN||{},{"一":"yī","下":"xià","事":"shì","交":"jiāo","人":"rén","介":"jiè","位":"wèi","住":"zhù","入":"rù","到":"dào","力":"lì","加":"jiā","印":"yìn","各":"gè","唯":"wéi","头":"tóu","子":"zi","尽":"jǐn","岗":"gǎng","应":"yìng","开":"kāi","式":"shì","待":"dài","快":"kuài","性":"xìng","悉":"xī","我":"wǒ","手":"shǒu","打":"dǎ","报":"bào","接":"jiē","朗":"lǎng","来":"lái","样":"yàng","格":"gé","正":"zhèng","派":"pài","熟":"shú","玩":"wán","着":"zhe","种":"zhǒng","笑":"xiào","算":"suàn","管":"guǎn","绍":"shào","续":"xù","自":"zì","记":"jì","象":"xiàng","负":"fù","责":"zé","过":"guò","进":"jìn","适":"shì","道":"dào","部":"bù","门":"mén","面":"miàn"});
+
 function initCanvas(){
   var c=document.getElementById('pmCanvas');
   var g=document.querySelector('.pm-grid');
@@ -640,6 +649,54 @@ function showVocab(e){
 document.addEventListener('click',function(){if(vwTip)vwTip.classList.remove('show')});
 
 function togglePinyin(){var hide = document.body.classList.toggle('hide-py'); var btn = document.getElementById('pyToggle'); btn.innerHTML = hide ? '👁 Show Pinyin' : '👁 Hide Pinyin'; try{localStorage.setItem('hidePy', hide ? '1' : '0')}catch(e){}}
+
+/* ---- Print Sheet: 生成本课全部练习字的田字格打印页 ---- */
+function printSheet(){
+  var box=document.getElementById('printSheet');
+  if(!box)return;
+  var chars=(typeof pChars!=='undefined'&&pChars&&pChars.length)?pChars.slice():[];
+  if(!chars.length){if(typeof alert==='function')alert('No characters to print');return}
+  box.innerHTML='';
+  var h1=document.createElement('div');
+  h1.style.cssText='font-size:15px;font-weight:bold;margin:0 0 8px;color:#333;font-family:sans-serif';
+  h1.textContent=(document.title||'Character Practice')+' \u2014 \u6c49\u5b57\u7ec3\u4e60';
+  box.appendChild(h1);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;flex-wrap:wrap';
+  box.appendChild(wrap);
+  for(var i=0;i<chars.length;i++){(function(ch){
+    var g=document.createElement('div');g.className='pm-grid';
+    var c=document.createElement('canvas');c.width=110;c.height=110;
+    g.appendChild(c);wrap.appendChild(g);
+    var ctx=(c.getContext?c.getContext('2d'):null);
+    if(!ctx)return;
+    var sd=(typeof STROKE_DATA!=='undefined'&&STROKE_DATA[ch])?STROKE_DATA[ch]:null;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=2;
+    if(sd&&sd.medians){
+      ctx.strokeStyle='#bbb';
+      var b=sd.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+      var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+      var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+      for(var s=0;s<sd.medians.length;s++){
+        var med=sd.medians[s];if(!med||!med.length)continue;
+        ctx.beginPath();
+        for(var p=0;p<med.length;p++){
+          var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+          if(p===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+      }
+    }else{
+      ctx.fillStyle='#bbb';ctx.font='70px KaiTi,STKaiti,\u6977\u4f53,serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(ch,c.width/2,c.height/2);
+    }
+  })(chars[i]);}
+  box.style.display='block';
+  if(typeof window.print==='function'){try{window.print()}catch(e){}}
+  setTimeout(function(){box.style.display='none'},1500);
+}
+
 </script>
 </body>
 </html>
