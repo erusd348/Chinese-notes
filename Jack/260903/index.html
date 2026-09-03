@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- v7.55b: 页面级 no-referrer（GitHub Pages https→https 跨域会发 origin referrer → Google TTS 404 → 回退 Web Speech；
+     本地 http 预览因协议降级天然无 referrer 所以正常——audio 元素 referrerpolicy 属性实测不可靠，必须页面级强制） -->
+<meta name="referrer" content="no-referrer">
+<title>Jack - 260903</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Source Han Serif SC','Noto Serif SC',serif;background:#f5f5f5;padding:20px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;color:#1A56DB;font-size:20px;margin-bottom:2px}
+  .date{text-align:center;color:#888;font-size:13px;margin-bottom:16px}
+
+  .row{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid #eee;gap:8px}
+  .row.gram{border-bottom:1px solid #d0e1fd}
+  .zh{font-size:17px;font-weight:bold;flex:1;min-width:0;overflow:hidden;color:#333}
+  .py{font-size:13px;color:#999;flex:1;min-width:0;overflow:hidden;font-style:italic}
+  .en{font-size:13px;color:#555;flex:1;min-width:0;overflow:hidden;word-break:break-word}
+
+  .play{width:32px;height:32px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:15px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .play:hover{background:#1A56DB;color:#fff}
+  .play-placeholder{width:32px;flex-shrink:0}
+
+  .play-all{display:block;margin:0 auto 16px;padding:9px 24px;border:none;border-radius:8px;background:#1A56DB;color:#fff;font-size:14px;cursor:pointer}
+  .play-all:hover{background:#1548b8}
+  .speed-bar{text-align:center;margin:-6px 0 16px}
+  .speed-btn{padding:4px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555}
+  .speed-btn.active{background:#1A56DB;color:#fff;border-color:#1A56DB}
+  .sec{background:#e8f0fe;color:#1A56DB;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:bold;margin:14px 0 4px;display:inline-block}
+  .back{display:inline-block;color:#1A56DB;text-decoration:none;font-size:13px;margin-bottom:10px}.back:hover{text-decoration:underline}
+  .lesson-label{text-align:center;color:#1A56DB;font-size:13px;font-weight:bold;padding:10px 0 6px;margin-top:8px;border-top:2px solid #1A56DB}
+  .footer{text-align:center;color:#aaa;font-size:11px;margin-top:16px}
+
+
+
+
+/* --- Hanzi Practice --- */
+.practice{width:28px;height:28px;border:none;border-radius:50%;background:#E8F0FE;color:#1A56DB;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;margin-left:4px}
+.practice:hover{background:#1A56DB;color:#fff}
+.pm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center}
+.pm-overlay.open{display:flex}
+.pm-panel{background:#fff;border-radius:12px;padding:18px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center}
+.pm-radical{font-size:11px;color:#168F16;margin-bottom:2px;min-height:15px;font-weight:bold}
+.pm-title-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:1px}
+.pm-title{font-size:17px;color:#333}
+.pm-pinyin{font-size:13px;color:#999;font-style:italic}
+.pm-grid{position:relative;width:280px;height:280px;margin:0 auto 10px;background-color:#fdf6f0;background-image:linear-gradient(to right,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom,transparent calc(50% - .5px),#d99 calc(50% - .5px),#d99 calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px)),linear-gradient(to bottom left,transparent calc(50% - .5px),#ecc calc(50% - .5px),#ecc calc(50% + .5px),transparent calc(50% + .5px));border:2px solid #c44;border-radius:4px;overflow:hidden}
+.anim-canvas{position:absolute;inset:0;z-index:2;pointer-events:none}
+.pm-canvas{position:absolute;inset:0;z-index:3;cursor:crosshair;touch-action:none}
+.pm-nav{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.pm-nav-btn{padding:5px 11px;border:1px solid #ddd;border-radius:4px;font-size:14px;cursor:pointer;background:#fff;font-family:KaiTi,STKaiti,楷体,serif;min-width:34px;text-align:center}.pm-nav-btn:hover{border-color:#E65100;color:#E65100}.pm-nav-btn.active{background:#E65100;color:#fff;border-color:#E65100}
+.pm-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.pm-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;cursor:pointer}.pm-btn-clear{background:#eee;color:#555}.pm-btn-clear:hover{background:#ddd}.pm-btn-close{background:#1A56DB;color:#fff}.pm-btn-close:hover{background:#1648b0}.pm-btn-print{background:#E65100;color:#fff}.pm-btn-print:hover{background:#c44800}.pm-btn-audio{background:#E8F0FE;color:#1A56DB}.pm-btn-audio:hover{background:#1A56DB;color:#fff}
+.pm-btn-anim{background:#43A047;color:#fff}.pm-btn-anim:hover{background:#2E7D32}.pm-speed{display:flex;align-items:center;gap:6px;justify-content:center;margin:4px 0 2px;font-size:11px;color:#888}
+.pm-speed input{width:80px;cursor:pointer}
+@media print{body>*:not(.print-sheet){display:none!important}.print-sheet{display:block!important;position:static;background:#fff;padding:15px}.print-sheet .pm-grid{break-inside:avoid;margin:6px;display:inline-block;width:110px;height:110px}}
+
+/* --- Flashcard --- */
+.fc-btn{display:inline-block;margin:0 8px;padding:9px 24px;border:none;border-radius:8px;background:#E67E22;color:#fff;font-size:14px;cursor:pointer;vertical-align:middle}
+.fc-btn:hover{background:#D35400}
+.fc-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:999;justify-content:center;align-items:center}
+.fc-overlay.show{display:flex}
+.fc-box{background:#fff;border-radius:14px;padding:24px;max-width:400px;width:90%;text-align:center}
+.fc-card-wrap{perspective:800px;margin:16px 0}
+.fc-card{width:200px;height:260px;margin:0 auto;position:relative;transform-style:preserve-3d;transition:transform .5s;cursor:pointer}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px}
+.fc-front{background:#E8F0FE;color:#1A56DB}
+.fc-front .fc-zh{font-size:52px;margin-bottom:12px}
+.fc-front .fc-hint{font-size:12px;color:#999}
+.fc-back{background:#F0F8E8;transform:rotateY(180deg)}
+.fc-back .fc-py{font-size:22px;color:#1A56DB;margin-bottom:8px}
+.fc-back .fc-en{font-size:16px;color:#555}
+.fc-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.fc-actions button{border:1px solid #ccc;background:#fff;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#333}
+.fc-actions button:hover{background:#E8F0FE;color:#1A56DB}
+.fc-primary{background:#E67E22!important;color:#fff!important;border-color:#E67E22!important}
+.fc-primary:hover{background:#D35400!important;color:#fff!important}
+.fc-counter{font-size:12px;color:#999;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="../">&larr; Back</a>
+<h1>Jack - Class Notes</h1>
+<p class="date">260903 &nbsp;|&nbsp; 🔊 Click ▶ to hear pronunciation</p>
+<button class="play-all" onclick="playAll()">▶ Play All Vocabulary &amp; Sentences</button><button class="fc-btn" onclick="openFlashcard()">🃏 Flashcards</button>
+<div class="speed-bar"><span style="font-size:12px;color:#999;margin-right:6px">Speed</span><button class="speed-btn" onclick="setSpeed(0.5)">0.5x</button><button class="speed-btn" onclick="setSpeed(0.75)">0.75x</button><button class="speed-btn active" onclick="setSpeed(1)">1x</button><button class="speed-btn" onclick="setSpeed(1.25)">1.25x</button><button class="speed-btn" onclick="setSpeed(1.5)">1.5x</button></div>
+
+
+        <div class="sec">&#128214; Vocabulary</div>
+
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(0)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">请</span>
+          <span class="py">qǐng</span>
+          <span class="en">please</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(1)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">听</span>
+          <span class="py">tīng</span>
+          <span class="en">to listen</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(2)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">说</span>
+          <span class="py">shuō</span>
+          <span class="en">to speak</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(3)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">读</span>
+          <span class="py">dú</span>
+          <span class="en">to read (aloud)</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(4)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">写</span>
+          <span class="py">xiě</span>
+          <span class="en">to write</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(5)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">坐</span>
+          <span class="py">zuò</span>
+          <span class="en">to sit</span>
+        </div>
+        <div class="row" style="background:#F8F9FA">
+          <button class="play" onclick="play(6)">▶</button><button class="practice" onclick="openPractice(this.parentElement.querySelector('.zh').textContent)">✎</button>
+          
+          <span class="zh">进</span>
+          <span class="py">jìn</span>
+          <span class="en">to enter</span>
+        </div>
+        <div class="sec">&#128218; Grammar</div>
+
+        <div class="row gram" style="background:#E8F0FE">
+          <span class="play-placeholder"></span>
+          <span class="zh" style="color:#1A56DB">请 + V</span>
+          <span class="py" style="color:#1A56DB"></span>
+          <span class="en" style="color:#1A56DB;font-weight:bold">(Structure) 请 = please, placed before a verb to make a polite request</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(7)">▶</button>
+          
+          <span class="zh">请进！</span>
+          <span class="py">qǐng jìn!</span>
+          <span class="en">Please come in!</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(8)">▶</button>
+          
+          <span class="zh">我不想听你说。</span>
+          <span class="py">wǒ bù xiǎng tīng nǐ shuō.</span>
+          <span class="en">I don&#x27;t want to listen to you speak.</span>
+        </div>
+        <div class="row" style="background:#FFFFFF">
+          <button class="play" onclick="play(9)">▶</button>
+          
+          <span class="zh">我不听。</span>
+          <span class="py">wǒ bù tīng.</span>
+          <span class="en">I won&#x27;t listen.</span>
+        </div>
+<p class="footer" id="footerMsg">Detecting voice...</p>
+</div>
+
+<div class="pm-overlay" id="pm" onclick="if(event.target===this)closePractice()"><div class="pm-panel"><div class="pm-nav" id="pmNav"></div><div class="pm-radical" id="pmRadical"></div><div class="pm-title-row"><span class="pm-title" id="pmTitle"></span><span class="pm-pinyin" id="pmPinyin"></span></div><div class="pm-hint" id="pmHint">Trace the character in the grid</div><div class="pm-grid"><canvas class="anim-canvas" id="animCanvas"></canvas><canvas class="pm-canvas" id="pmCanvas"></canvas></div><div class="pm-speed"><span>Speed:</span><input type="range" id="animSpeed" min="5" max="300" value="15"><span id="speedLabel">0.15x</span></div><div class="pm-btns"><button class="pm-btn pm-btn-anim" id="animPlayBtn" onclick="animToggle()">▶ Stroke</button><button class="pm-btn pm-btn-audio" onclick="playChar()">▶ Audio</button><button class="pm-btn pm-btn-clear" onclick="clearCanvas()">Clear</button><button class="pm-btn pm-btn-close" onclick="closePractice()">Close</button><button class="pm-btn pm-btn-print" onclick="printSheet()">Print Sheet</button></div></div></div><div class="print-sheet" id="printSheet" style="display:none"></div>
+<div class="fc-overlay" id="fcOverlay" onclick="if(event.target===this)closeFlashcard()"><div class="fc-box"><h3 style="color:#1A56DB;margin-bottom:4px">🃏 Flashcards</h3><div class="fc-card-wrap"><div class="fc-card" id="fcCard" onclick="flipCard()"><div class="fc-front"><div class="fc-zh" id="fcZh"></div><div class="fc-hint">Click to flip</div></div><div class="fc-back"><div class="fc-py" id="fcPy"></div><div class="fc-en" id="fcEn"></div></div></div></div><div class="fc-actions"><button onclick="flipCard()">Space</button><button onclick="prevCard()">←</button><button onclick="nextCard()">→</button><button onclick="shuffleCards()">🔀</button><button class="fc-primary" onclick="playCard()">▶</button><button onclick="closeFlashcard()">✕</button></div><div class="fc-counter" id="fcCounter"></div></div></div>
+<audio id="player" preload="none" referrerpolicy="no-referrer"></audio>
+<script>
+const texts = ['请','听','说','读','写','坐','进','请进！','我不想听你说。','我不听。'];
+document.getElementById('footerMsg').textContent = 'Click ▶ to hear pronunciation';
+
+// v7.52c: 语速控制（拼音练习页慢速听声调）——三路径应用 playbackRate / u.rate
+var SPEED_RATE = 1.0;
+function setSpeed(r) {
+  SPEED_RATE = r;
+  var btns = document.querySelectorAll('.speed-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', parseFloat(btns[i].textContent) === r);
+  }
+}
+
+// Pre-detect Chinese TTS voices (hz=false on Windows without Chinese lang pack)
+var hz = false;
+function cv() {
+  var v = window.speechSynthesis.getVoices();
+  hz = v.some(function(x) { return x.lang.startsWith('zh'); });
+}
+cv();
+if (window.speechSynthesis.onvoiceschanged !== undefined) {
+  window.speechSynthesis.onvoiceschanged = cv;
+}
+
+function play(i) {
+  var text = typeof i === "number" ? texts[i] : i;
+  try { document.getElementById('player').onerror = null; } catch(e) {}
+  // v7.52e: ① 离线 MP3 优先（拼音笔记页 --audio-dir 上传 audio/audiodata.js，质量最好且离线可用）
+  if (typeof AUDIODATA !== "undefined" && AUDIODATA[text]) {
+    var p0 = document.getElementById('player');
+    p0.src = 'audio/' + AUDIODATA[text];
+    p0.playbackRate = SPEED_RATE;
+    p0.play();
+    return;
+  }
+  // v7.52q: ② Google TTS → ③ Web Speech 兜底（去掉 Edge TTS local——依赖本机 tts-server，
+  // 学生端 GitHub Pages 永远触发不了；Google 质量稳、适合外国学生）
+  googleTTS(text);
+}
+
+function speechOrGoogle(text) {
+  // ③ Web Speech API（最后兜底；v7.52q 不再回调 googleTTS，防互调死循环）
+  if (!hz) { showTtsMsg('⚠ 此设备没有中文语音包，无法播放。请用 Chrome/Edge 或检查系统语音设置'); return; }
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.9 * SPEED_RATE;
+  var voices = speechSynthesis.getVoices();
+  var zhVoice = voices.find(function(v) { return v.lang.startsWith('zh'); });
+  if (zhVoice) u.voice = zhVoice;
+  var fb = setTimeout(function() {
+    try { speechSynthesis.cancel(); } catch(e) {}
+  }, 2500);
+  u.onstart = function() { clearTimeout(fb); };
+  u.onerror = function() { clearTimeout(fb); showTtsMsg('⚠ 语音播放失败，请检查网络后重试'); };
+  try { speechSynthesis.cancel(); } catch(e) {}
+  try { speechSynthesis.speak(u); } catch(e) { showTtsMsg('⚠ 语音播放失败，请检查网络后重试'); }
+}
+
+function googleTTS(text) {
+  var p = document.getElementById('player');
+  // Google TTS 单次请求 ~200 字符上限；超长（阅读段落）直接走 Web Speech
+  if (text.length > 180) { speechOrGoogle(text); return; }
+  // v7.52aa: 超时 3s → 8s（用户实测 Google 常被 3s 误判回退 Web Speech——慢网/首次连接握手 >3s 常见）
+  var t = setTimeout(function() { p.onerror = null; speechOrGoogle(text); }, 8000);
+  p.onerror = function() { clearTimeout(t); p.onerror = null; speechOrGoogle(text); };
+  p.onplaying = function() { clearTimeout(t); p.onerror = null; };
+  // v7.55b: JS 双保险——meta no-referrer 被忽略时，audio 元素级 referrerPolicy 也强制无 referrer
+  // （GitHub Pages https→https 跨域默认 strict-origin-when-cross-origin 发 origin → Google TTS 404）
+  p.referrerPolicy = 'no-referrer';
+  p.src = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&q=' + encodeURIComponent(text) + '&client=tw-ob';
+  p.playbackRate = SPEED_RATE;
+  p.play();
+}
+
+function showTtsMsg(msg) {
+  // v7.52aa: Web Speech 无中文语音/失败时给出可见提示（原静默 return → 学生点击无反应）
+  var el = document.getElementById('tts-msg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'tts-msg';
+    el.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#B26A00;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.3)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(showTtsMsg._t);
+  showTtsMsg._t = setTimeout(function() { el.style.display = 'none'; }, 4000);
+}
+
+function playAll() {
+  let i = 0;
+  function n() {
+    if (i >= texts.length) return;
+    play(i);
+    i++;
+    setTimeout(n, 1300);
+  }
+  n();
+}
+
+
+/* ---- Hanzi Practice ---- */var PINYIN_RE=/[aāáǎà]i|[aāáǎà]ng?|[aāáǎà]o?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[aāáǎà][io]?|[bpmf]?[oōóǒò]u?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]i?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[iīíǐì][aāáǎàoōóǒòeēéěèuūúǔù]?n?g?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[oōóǒò]ng|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[uūúǔù][aāáǎàoōóǒòeēéěèiīíǐì]?n?g?|[nlgkhjqxzcsry]?[üǖǘǚǜ][eēéěè]?n?|(?:ch|sh|zh|[bpmfdtnlgkhjqxzcsryw])?[eēéěè]r|[eēéěè]r/g;
+var STROKE_DATA={"写":{"medians":[[[268, 748], [281, 716], [279, 695], [228, 582], [225, 533]], [[314, 712], [328, 702], [366, 703], [495, 728], [699, 752], [745, 743], [759, 733], [773, 707], [686, 625]], [[435, 500], [451, 511], [524, 521], [621, 550], [672, 546]], [[389, 634], [412, 612], [420, 594], [373, 347], [428, 346], [542, 372], [692, 389], [735, 383], [768, 354], [730, 141], [709, 73], [690, 39], [659, 20], [554, 91]], [[169, 180], [194, 171], [239, 170], [320, 191], [551, 230], [625, 212]]],"bounds":{"minX": 169, "maxX": 773, "minY": 20, "maxY": 752}},"听":{"medians":[[[92, 572], [114, 553], [126, 531], [160, 308]], [[144, 572], [161, 562], [275, 593], [294, 589], [317, 566], [292, 449], [266, 429]], [[179, 369], [190, 384], [257, 400], [309, 406], [336, 398]], [[784, 733], [710, 743], [606, 679], [521, 641], [510, 641], [507, 630]], [[419, 659], [462, 621], [463, 605], [464, 507], [455, 407], [435, 303], [404, 218], [364, 151], [304, 86], [249, 50]], [[495, 465], [507, 473], [603, 493], [816, 528], [856, 528], [906, 515]], [[642, 476], [682, 444], [679, -64]]],"bounds":{"minX": 92, "maxX": 906, "minY": -64, "maxY": 743}},"坐":{"medians":[[[307, 641], [336, 607], [296, 497], [238, 406], [209, 372], [158, 328]], [[297, 451], [323, 449], [379, 423], [406, 400], [419, 378]], [[700, 674], [725, 647], [728, 636], [695, 538], [640, 447], [573, 375]], [[681, 466], [697, 467], [787, 426], [811, 404], [826, 377]], [[324, 243], [365, 235], [419, 238], [499, 248], [659, 283], [719, 283]], [[470, 792], [526, 748], [528, 727], [515, 137], [513, 103], [493, 84]], [[184, 42], [221, 31], [258, 31], [467, 57], [787, 78], [841, 74], [902, 53]]],"bounds":{"minX": 158, "maxX": 902, "minY": 31, "maxY": 792}},"说":{"medians":[[[255, 790], [346, 733], [365, 700]], [[64, 461], [101, 454], [138, 460], [245, 504], [266, 507], [291, 494], [257, 184], [264, 149], [301, 159], [408, 254]], [[488, 749], [543, 699], [563, 667]], [[739, 835], [760, 815], [768, 797], [686, 703], [646, 669], [644, 660]], [[446, 562], [466, 547], [482, 523], [516, 362]], [[494, 565], [518, 555], [695, 597], [727, 591], [751, 562], [719, 467], [692, 453]], [[534, 381], [552, 396], [684, 421], [729, 421], [750, 415]], [[504, 307], [525, 275], [505, 210], [480, 160], [433, 100], [367, 44], [339, 28]], [[618, 383], [645, 365], [652, 352], [641, 187], [649, 117], [667, 86], [693, 67], [738, 53], [782, 49], [866, 59], [907, 79], [925, 98], [932, 239]]],"bounds":{"minX": 64, "maxX": 932, "minY": 28, "maxY": 835}},"请":{"medians":[[[255, 794], [347, 739], [377, 696]], [[38, 449], [64, 443], [98, 447], [234, 502], [273, 509], [290, 506], [299, 491], [261, 186], [269, 152], [319, 169], [416, 251]], [[489, 673], [559, 670], [664, 693], [743, 718], [798, 719]], [[499, 562], [558, 561], [658, 581], [712, 600], [759, 601]], [[589, 825], [622, 802], [634, 780], [626, 515], [611, 494]], [[377, 440], [429, 435], [614, 474], [859, 511], [899, 507], [933, 496]], [[504, 384], [529, 362], [536, 343], [536, 283], [521, 141], [495, -4]], [[560, 372], [573, 367], [605, 372], [616, 379], [723, 402], [762, 376], [760, 322], [775, 106], [772, 40], [748, -2], [720, 5], [653, 39]], [[561, 253], [571, 264], [633, 280], [674, 284], [696, 279]], [[552, 153], [563, 164], [666, 184], [703, 178]]],"bounds":{"minX": 38, "maxX": 933, "minY": -4, "maxY": 825}},"读":{"medians":[[[257, 783], [350, 724], [376, 681]], [[71, 464], [108, 458], [142, 465], [234, 507], [270, 507], [278, 497], [245, 185], [255, 152], [289, 163], [384, 254]], [[490, 666], [546, 660], [629, 673], [723, 697], [783, 699]], [[597, 802], [634, 767], [630, 583], [615, 562]], [[419, 512], [467, 505], [666, 552], [753, 567], [791, 567], [821, 554], [836, 534], [773, 454]], [[485, 425], [522, 401], [539, 382]], [[461, 341], [499, 314], [519, 291]], [[407, 207], [454, 199], [616, 226], [785, 263], [823, 266], [862, 260]], [[590, 464], [633, 435], [639, 411], [629, 274], [604, 177], [579, 134], [521, 78], [460, 42], [380, 14]], [[693, 161], [802, 85], [829, 51], [842, 19]]],"bounds":{"minX": 71, "maxX": 862, "minY": 14, "maxY": 802}},"进":{"medians":[[[423, 555], [501, 549], [727, 598], [784, 598]], [[385, 384], [435, 379], [601, 409], [785, 431], [845, 424], [869, 411]], [[492, 687], [512, 676], [530, 652], [534, 527], [521, 401], [502, 346], [466, 285], [431, 246], [398, 223]], [[637, 791], [683, 745], [684, 361], [674, 225], [677, 142]], [[237, 767], [319, 710], [341, 671]], [[85, 446], [151, 451], [258, 491], [272, 492], [296, 475], [294, 438], [259, 366], [257, 349], [265, 314], [304, 230], [304, 193], [292, 182]], [[92, 129], [136, 116], [226, 152], [305, 155], [379, 135], [587, 61], [676, 39], [765, 28], [824, 33], [934, 62]]],"bounds":{"minX": 85, "maxX": 934, "minY": 28, "maxY": 791}}};
+var RADICAL_DATA={"写":{"radical":"冖","radicalName":"秃宝盖","radicalNamePy":"tū bǎo gài","meaning":"cover","desc":"cover — canopy or lid on top"},"听":{"radical":"口","radicalName":"口字旁","radicalNamePy":"kǒu zì páng","meaning":"mouth","desc":"mouth — speech/eating-related"},"坐":{"radical":"土","radicalName":"提土旁","radicalNamePy":"tí tǔ páng","meaning":"earth","desc":"earth/soil — ground-related"},"说":{"radical":"讠","radicalName":"言字旁","radicalNamePy":"yán zì páng","meaning":"speech","desc":"speech — language/communication"},"请":{"radical":"讠","radicalName":"言字旁","radicalNamePy":"yán zì páng","meaning":"speech","desc":"speech — language/communication"},"读":{"radical":"讠","radicalName":"言字旁","radicalNamePy":"yán zì páng","meaning":"speech","desc":"to read — speech radical on left"},"进":{"radical":"辶","radicalName":"走之底","radicalNamePy":"zǒu zhī dǐ","meaning":"walk","desc":"walk/road — movement, path-related"}};
+var pChars=[],CHAR_PINYIN={},curIdx=0,pmCtx=null,drawing=false,animCtx=null,animTimer=null,animStk=0,animPt=0,animSpeedMult=0.15,animLoop=false,strokeData=null;
+(function(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var btns=r.querySelectorAll('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');
+    if(!btns.length||!zh)return;
+    var word=zh.textContent.trim();
+    for(var i=0;i<word.length;i++){
+      var ch=word[i];
+      if(!/[\u4e00-\u9fff]/.test(ch))continue;
+      if(!seen[ch]){seen[ch]=true;pChars.push(ch);}
+    }
+    if(py){
+      var text=py.textContent.trim();
+      PINYIN_RE.lastIndex=0;var syls=[],m;
+      while((m=PINYIN_RE.exec(text))!==null)syls.push(m[0]);
+      if(!syls.length)syls=text.split(/\s+/);
+      var ci=0;
+      for(var j=0;j<word.length;j++){
+        var c=word[j];
+        if(/[\u4e00-\u9fff]/.test(c)){
+          if(ci<syls.length)CHAR_PINYIN[c]=syls[ci];
+          ci++;
+        }
+      }
+    }
+  });
+})();
+function initCanvas(){
+  var c=document.getElementById('pmCanvas');
+  var g=document.querySelector('.pm-grid');
+  c.width=g.offsetWidth;c.height=g.offsetHeight;
+  pmCtx=c.getContext('2d');pmCtx.strokeStyle='#c00';pmCtx.lineWidth=3;pmCtx.lineCap='round';pmCtx.lineJoin='round';
+  c.onpointerdown=function(e){drawing=true;pmCtx.beginPath();var r=c.getBoundingClientRect();pmCtx.moveTo(e.clientX-r.left,e.clientY-r.top)};
+  c.onpointermove=function(e){if(!drawing)return;var r=c.getBoundingClientRect();pmCtx.lineTo(e.clientX-r.left,e.clientY-r.top);pmCtx.stroke()};
+  c.onpointerup=c.onpointerleave=function(){drawing=false};
+  // Init animation canvas
+  var ac=document.getElementById('animCanvas');
+  ac.width=g.offsetWidth;ac.height=g.offsetHeight;
+  animCtx=ac.getContext('2d');animCtx.strokeStyle='#ccc';animCtx.lineWidth=5;animCtx.lineCap='round';animCtx.lineJoin='round';
+  // Speed slider
+  var slider=document.getElementById('animSpeed');
+  slider.oninput=function(){animSpeedMult=this.value/100;document.getElementById('speedLabel').textContent=animSpeedMult.toFixed(2)+'x'};
+}
+function openPractice(t){
+  var chars=t.split('').filter(function(c){return/[\u4e00-\u9fff]/.test(c)});
+  for(var i=0;i<pChars.length;i++){if(pChars[i]===chars[0]){curIdx=i;break}}
+  document.getElementById('pm')._wordChars=chars;
+  document.getElementById('pm').classList.add('open');
+  setTimeout(function(){initCanvas();showChar();renderNav()},100);
+}
+function closePractice(){animPause();document.getElementById('pm').classList.remove('open')}
+function clearCanvas(){var c=document.getElementById('pmCanvas');if(pmCtx)pmCtx.clearRect(0,0,c.width,c.height)}
+function showChar(){
+  var ch=pChars[curIdx];
+  document.getElementById('pmTitle').textContent=ch;
+  document.getElementById('pmPinyin').textContent=CHAR_PINYIN[ch]||'';
+  document.getElementById('pmHint').textContent='Trace the character in the grid';
+  var radInfo=typeof RADICAL_DATA!=='undefined'?RADICAL_DATA[ch]:null;
+  var radEl=document.getElementById('pmRadical');
+  if(radInfo){radEl.innerHTML='<span style="font-size:16px">'+radInfo.radical+'</span> '+radInfo.radicalName+' '+radInfo.radicalNamePy+' &mdash; '+radInfo.desc}
+  else{radEl.textContent=''}
+  loadStroke(ch);clearCanvas();clearAnimCanvas();
+  // Draw completed strokes as gray reference
+  if(strokeData)for(var s=0;s<strokeData.medians.length;s++)drawStroke(s,1);
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function playChar(){if(pChars[curIdx]&&typeof play!=='undefined')play(pChars[curIdx])}
+function loadChar(i){curIdx=i;showChar();renderNav()}
+function renderNav(){
+  var nav=document.getElementById('pmNav'),h='';
+  var wordChars=document.getElementById('pm')._wordChars||[];
+  for(var i=0;i<pChars.length;i++){var cls='pm-nav-btn';if(i===curIdx)cls+=' active';h+='<button class="'+cls+'" onclick="loadChar('+i+')" style="'+(wordChars.indexOf(pChars[i])>=0?'border-color:#E65100;font-weight:bold':'')+'">'+pChars[i]+'</button>'}
+  nav.innerHTML=h;
+}
+
+
+/* ---- Stroke Animation ---- */
+function loadStroke(ch){
+  animPause();
+  if(typeof STROKE_DATA==='undefined'||!STROKE_DATA[ch]){strokeData=null;return}
+  var sd=STROKE_DATA[ch];strokeData={medians:sd.medians,bounds:sd.bounds};
+  animStk=0;animPt=0;
+  clearAnimCanvas();
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+function clearAnimCanvas(){if(animCtx){var c=document.getElementById('animCanvas');animCtx.clearRect(0,0,c.width,c.height)}}
+function animToggle(){
+  if(animTimer){animPause();return}
+  if(!strokeData||animStk>=strokeData.medians.length){animStk=0;animPt=0;clearAnimCanvas()}
+  if(animStk===0&&animPt===0){document.getElementById('animPlayBtn').textContent='\u23f8';animPlay()}
+}
+function animPlay(){
+  if(!strokeData||animStk>=strokeData.medians.length){if(animLoop){animStk=0;animPt=0;clearAnimCanvas();document.getElementById('animPlayBtn').textContent='\u23f8'}else{animPause();return}}
+  var med=strokeData.medians[animStk];
+  animTimer=setTimeout(function(){
+    animPt++;
+    animDrawCurrentState();
+    if(animPt<med.length){animPlay()}
+    else{animStk++;animPt=0;if(animStk<strokeData.medians.length){clearAnimCanvas();for(var s=0;s<animStk;s++)drawStroke(s,1)}animPlay()}
+  },40/animSpeedMult);
+}
+function animDrawCurrentState(){
+  if(!strokeData||animStk>=strokeData.medians.length)return;
+  var med=strokeData.medians[animStk];
+  if(!med||animPt<=0)return;
+  for(var s=0;s<animStk;s++)drawStroke(s,1);
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<animPt;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function drawStroke(s,full){
+  if(!strokeData)return;
+  var med=strokeData.medians[s];if(!med)return;
+  var c=document.getElementById('animCanvas');
+  animCtx.beginPath();
+  var b=strokeData.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+  var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+  var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+  for(var p=0;p<med.length;p++){
+    var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+    if(p===0)animCtx.moveTo(x,y);else animCtx.lineTo(x,y)
+  }
+  animCtx.stroke();
+}
+function animPause(){
+  if(animTimer){clearTimeout(animTimer);animTimer=null}
+  document.getElementById('animPlayBtn').textContent='\u25b6 Stroke';
+}
+
+
+/* ---- Flashcard ---- */
+var fcData=[],fcOrder=[],fcIdx=0;
+function initFlashcardData(){
+  var rows=document.querySelectorAll('.row');var seen={};
+  rows.forEach(function(r){
+    var b=r.querySelector('.practice');var zh=r.querySelector('.zh');
+    var py=r.querySelector('.py');var en=r.querySelector('.en');
+    if(!b||!zh)return;
+    var text=zh.textContent.trim().replace(/^\w+:?\s*/,'');
+    fcData.push({zh:text,py:py?py.textContent.trim():'',en:en?en.textContent.trim():''});
+  });
+}
+function shuffleCards(){for(var i=fcOrder.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=fcOrder[i];fcOrder[i]=fcOrder[j];fcOrder[j]=t;}fcIdx=0;showCard();}
+function openFlashcard(){
+  if(!fcOrder.length){fcOrder=[];for(var i=0;i<fcData.length;i++)fcOrder.push(i);}
+  shuffleCards();document.getElementById('fcOverlay').classList.add('show');
+}
+function closeFlashcard(){document.getElementById('fcOverlay').classList.remove('show');}
+function showCard(){
+  if(!fcOrder.length)return;
+  var d=fcData[fcOrder[fcIdx]];
+  document.getElementById('fcZh').textContent=d.zh;
+  document.getElementById('fcPy').textContent=d.py;
+  document.getElementById('fcEn').textContent=d.en;
+  document.getElementById('fcCard').classList.remove('flipped');
+  document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcOrder.length;
+}
+function flipCard(){document.getElementById('fcCard').classList.toggle('flipped');}
+function nextCard(){fcIdx=(fcIdx+1)%fcOrder.length;showCard();}
+function prevCard(){fcIdx=(fcIdx-1+fcOrder.length)%fcOrder.length;showCard();}
+function playCard(){
+  var d=fcData[fcOrder[fcIdx]];
+  if(typeof play==='function')play(d.zh);
+}
+document.addEventListener('keydown',function(e){
+  if(!document.getElementById('fcOverlay').classList.contains('show'))return;
+  if(e.key===' '||e.key==='Enter'){e.preventDefault();flipCard();}
+  else if(e.key==='ArrowRight')nextCard();
+  else if(e.key==='ArrowLeft')prevCard();
+  else if(e.key==='r')shuffleCards();
+  else if(e.key==='Esc')closeFlashcard();
+});
+initFlashcardData();
+</script>
+</body>
+</html>
