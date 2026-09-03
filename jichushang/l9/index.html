@@ -503,5 +503,52 @@ function playAll(){
   var rs=document.querySelectorAll('.sec-play-row');
   for(var k2=0;k2<rs.length;k2++){var s=rs[k2].querySelector('.sec-stop');if(s)s.style.display='none'}
 }
+
+/* ---- Print Sheet: 生成本课全部练习字的田字格打印页 ---- */
+function printSheet(){
+  var box=document.getElementById('printSheet');
+  if(!box)return;
+  var chars=(typeof pChars!=='undefined'&&pChars&&pChars.length)?pChars.slice():[];
+  if(!chars.length){if(typeof alert==='function')alert('No characters to print');return}
+  box.innerHTML='';
+  var h1=document.createElement('div');
+  h1.style.cssText='font-size:15px;font-weight:bold;margin:0 0 8px;color:#333;font-family:sans-serif';
+  h1.textContent=(document.title||'Character Practice')+' \u2014 \u6c49\u5b57\u7ec3\u4e60';
+  box.appendChild(h1);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;flex-wrap:wrap';
+  box.appendChild(wrap);
+  for(var i=0;i<chars.length;i++){(function(ch){
+    var g=document.createElement('div');g.className='pm-grid';
+    var c=document.createElement('canvas');c.width=110;c.height=110;
+    g.appendChild(c);wrap.appendChild(g);
+    var ctx=(c.getContext?c.getContext('2d'):null);
+    if(!ctx)return;
+    var sd=(typeof STROKE_DATA!=='undefined'&&STROKE_DATA[ch])?STROKE_DATA[ch]:null;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=2;
+    if(sd&&sd.medians){
+      ctx.strokeStyle='#bbb';
+      var b=sd.bounds||{minX:0,maxX:1024,minY:0,maxY:1024};
+      var sx=c.width/(b.maxX-b.minX+40),sy=c.height/(b.maxY-b.minY+40),sc=Math.min(sx,sy);
+      var ox=(c.width-(b.maxX-b.minX)*sc)/2-b.minX*sc,oy=(c.height-(b.maxY-b.minY)*sc)/2-b.minY*sc;
+      for(var s=0;s<sd.medians.length;s++){
+        var med=sd.medians[s];if(!med||!med.length)continue;
+        ctx.beginPath();
+        for(var p=0;p<med.length;p++){
+          var x=med[p][0]*sc+ox,y=c.height-(med[p][1]*sc+oy);
+          if(p===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+      }
+    }else{
+      ctx.fillStyle='#bbb';ctx.font='70px KaiTi,STKaiti,\u6977\u4f53,serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(ch,c.width/2,c.height/2);
+    }
+  })(chars[i]);}
+  box.style.display='block';
+  if(typeof window.print==='function'){try{window.print()}catch(e){}}
+  setTimeout(function(){box.style.display='none'},1500);
+}
 </script>
 </body></html>
